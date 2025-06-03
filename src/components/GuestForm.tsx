@@ -352,7 +352,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                 <FormLabel className="flex items-center gap-2"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal(s)</FormLabel>
                 {fields.map((item, index) => (
                   <div key={item.id} className="space-y-2 p-3 border rounded-md bg-background/50 shadow-inner">
-                    <div className="grid grid-cols-10 gap-2 items-start">
+                    <div className="grid grid-cols-10 gap-2 items-center">
                       <FormField
                         control={form.control}
                         name={`mealPreferences.otherMeals.${index}.name`}
