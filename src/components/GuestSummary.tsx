@@ -11,9 +11,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import Link from "next/link"; // Added for Print Preview link
+import Link from "next/link"; 
 
 interface GuestSummaryProps {
   summary: GuestSummaryData;
@@ -23,8 +22,6 @@ interface GuestSummaryProps {
 
 export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false }: GuestSummaryProps) {
   const handlePrint = () => {
-    // This print is for the current page, not the dedicated print preview page
-    // For a more dedicated print experience, direct to print-preview page
     window.print(); 
   };
 
@@ -34,11 +31,20 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
         await navigator.share({
           title: 'Guest List Summary',
           text: `Here's the guest list summary: ${summary.totalGuests} guests. Adults: ${summary.totalAdults}, Children: ${summary.totalChildren}.`,
+          // url: window.location.href // Optional: you can share the current page URL
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error sharing:', error);
-        // Consider a toast notification for errors
-        alert('Sharing failed. Your browser might not support this feature or there was an error.');
+        let alertMessage = 'Sharing failed. Your browser might not support this feature or there was an error.';
+        
+        if (error.name === 'AbortError') {
+          // User cancelled the share operation, so we don't need to show an error.
+          return;
+        } else if (error.name === 'NotAllowedError' || (error.message && error.message.toLowerCase().includes('permission denied'))) {
+          alertMessage = 'Sharing failed. It seems permission to share was denied or the action was not allowed. Please check your browser settings or try again.';
+        }
+        
+        alert(alertMessage);
       }
     } else {
       alert('Share functionality is not supported in your browser. You can manually copy the details.');
@@ -122,7 +128,6 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
           </div>
         </div>
       </CardContent>
-      {/* Conditionally render CardFooter only if onSaveListClick is provided */}
       {onSaveListClick && (
         <CardFooter className="mt-auto pt-6 print-hide">
           <div className="flex w-full gap-0">
@@ -157,10 +162,12 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
                     Go to Print Preview
                   </DropdownMenuItem>
                 </Link>
-                <DropdownMenuItem onClick={handleShare}>
-                  <Share2 className="mr-2 h-4 w-4" />
-                  Share Summary
-                </DropdownMenuItem>
+                {navigator.share && ( // Conditionally render share if API is available
+                    <DropdownMenuItem onClick={handleShare}>
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Share Summary
+                    </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
