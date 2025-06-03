@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import type { Guest } from "@/lib/types";
 import { PlusCircle, Users, Utensils, Salad, Beef, Grape, Wheat, Trash2, ArrowLeft, ArrowRight } from "lucide-react";
-// Removed useToast import as it's now handled by the parent page
 import React, { useState } from "react";
 
 const otherMealPreferenceSchema = z.object({
@@ -68,7 +67,6 @@ interface GuestFormProps {
 }
 
 export function GuestForm({ onAddGuest }: GuestFormProps) {
-  // Removed toast instance
   const [currentStep, setCurrentStep] = useState(1);
 
   const form = useForm<GuestFormValues>({
@@ -100,7 +98,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
         otherMeals: data.mealPreferences.otherMeals || [],
       },
     };
-    onAddGuest(guestData); // Parent will handle toast and UI changes
+    onAddGuest(guestData);
     form.reset();
     setCurrentStep(1); 
   }
@@ -196,10 +194,8 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     )}
                   />
                 </div>
-                {form.formState.errors.adults && form.formState.errors.adults.type === 'manual' && (
-                    <FormMessage>{form.formState.errors.adults.message}</FormMessage>
-                )}
-                {form.formState.errors.adults && form.formState.errors.adults.type !== 'manual' && !form.formState.errors.children && (
+                {/* Combined error message for adults + children > 0 refine check, if adults field has the error path */}
+                {form.formState.errors.adults && (
                     <FormMessage>{form.formState.errors.adults.message}</FormMessage>
                 )}
               </>
@@ -216,49 +212,49 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     control={form.control}
                     name="mealPreferences.veg"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between">
-                        <FormLabel className="flex items-center gap-1"><Salad className="h-4 w-4 text-green-600"/>Vegetarian</FormLabel>
-                        <FormControl>
-                          <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
-                        </FormControl>
+                      <FormItem>
+                        <div className="flex items-center justify-between">
+                          <FormLabel className="flex items-center gap-1"><Salad className="h-4 w-4 text-green-600"/>Vegetarian</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
+                          </FormControl>
+                        </div>
+                        <FormMessage className="text-right" /> 
                       </FormItem>
                     )}
                   />
-                  <FormMessage className="text-right -mt-3">
-                    {form.formState.errors.mealPreferences?.veg?.message}
-                  </FormMessage>
 
                   <FormField
                     control={form.control}
                     name="mealPreferences.nonVeg"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between">
-                        <FormLabel className="flex items-center gap-1"><Beef className="h-4 w-4 text-red-600"/>Non-Vegetarian</FormLabel>
-                        <FormControl>
-                          <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
-                        </FormControl>
+                      <FormItem>
+                        <div className="flex items-center justify-between">
+                          <FormLabel className="flex items-center gap-1"><Beef className="h-4 w-4 text-red-600"/>Non-Vegetarian</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
+                          </FormControl>
+                        </div>
+                        <FormMessage className="text-right" />
                       </FormItem>
                     )}
                   />
-                  <FormMessage className="text-right -mt-3">
-                    {form.formState.errors.mealPreferences?.nonVeg?.message}
-                  </FormMessage>
-
+                  
                   <FormField
                     control={form.control}
                     name="mealPreferences.childMeal"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between">
-                        <FormLabel className="flex items-center gap-1"><Grape className="h-4 w-4 text-purple-600"/>Child Meal</FormLabel>
-                        <FormControl>
-                          <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
-                        </FormControl>
+                      <FormItem>
+                        <div className="flex items-center justify-between">
+                          <FormLabel className="flex items-center gap-1"><Grape className="h-4 w-4 text-purple-600"/>Child Meal</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
+                          </FormControl>
+                        </div>
+                        <FormMessage className="text-right" />
                       </FormItem>
                     )}
                   />
-                  <FormMessage className="text-right -mt-3">
-                    {form.formState.errors.mealPreferences?.childMeal?.message}
-                  </FormMessage>
                   
                   <div className="space-y-2">
                     <FormLabel className="flex items-center gap-1"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal(s)</FormLabel>
@@ -296,7 +292,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                             variant="link"
                             size="icon"
                             onClick={() => remove(index)}
-                            className="col-span-1 text-destructive mt-1 focus-visible:ring-destructive"
+                            className="col-span-1 text-destructive mt-1 focus-visible:ring-destructive focus-visible:ring-offset-0"
                             aria-label={`Remove other meal ${index + 1}`}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -324,9 +320,8 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                         </div>
                     ))}
                   </div>
-                   {form.formState.errors.mealPreferences?.veg?.type === 'custom' && (
-                    <FormMessage>{form.formState.errors.mealPreferences.veg.message}</FormMessage>
-                   )}
+                  {/* This message handles the refine rule for total meal balance, anchored to mealPreferences.veg path */}
+                  {/* It will be displayed by the FormMessage inside the veg FormField if that error occurs */}
                 </div>
               </>
             )}
@@ -357,4 +352,3 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     </Card>
   );
 }
-
