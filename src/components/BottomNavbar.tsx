@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { scrollToElement } from '@/lib/utils';
-import { useState, useEffect } from 'react'; // Import useState and useEffect
+import { useState, useEffect } from 'react';
 
 export function BottomNavbar() {
   const pathname = usePathname();
@@ -17,9 +17,9 @@ export function BottomNavbar() {
     setMounted(true);
   }, []);
 
-  // Determine active state only after component has mounted
-  const isMainPageActive = mounted ? pathname === '/' : false;
+  const isAddPageActive = mounted ? pathname === '/' : false;
   const isGuestListPageActive = mounted ? pathname === '/guest-list' : false;
+  const isSummaryPageActive = mounted ? pathname === '/summary' : false;
 
   const getItemClasses = (isActive: boolean) => {
     return cn(
@@ -30,11 +30,11 @@ export function BottomNavbar() {
     );
   };
 
-  const handleNavAndScroll = (elementId: string) => {
-    if (pathname === '/guest-list') { 
-      router.push(`/#${elementId}`);
+  const handleNavAndScrollToForm = () => {
+    if (pathname !== '/') { 
+      router.push(`/#guest-form-section`);
     } else {
-      scrollToElement(elementId);
+      scrollToElement('guest-form-section');
     }
   };
 
@@ -44,10 +44,10 @@ export function BottomNavbar() {
         <ul className="flex justify-around items-center h-full">
           <li className="flex-1 h-full">
             <button
-              onClick={() => handleNavAndScroll('guest-form-section')}
-              className={getItemClasses(isMainPageActive)}
+              onClick={handleNavAndScrollToForm}
+              className={getItemClasses(isAddPageActive)}
               aria-label="Add Guest"
-              aria-current={mounted && isMainPageActive ? "page" : undefined}
+              aria-current={mounted && isAddPageActive ? "page" : undefined}
             >
               <PlusCircle className="h-6 w-6" />
               <span className="text-xs mt-1">Add</span>
@@ -55,10 +55,10 @@ export function BottomNavbar() {
           </li>
           <li className="flex-1 h-full">
             <button
-              onClick={() => handleNavAndScroll('guest-form-section')} 
-              className={getItemClasses(isMainPageActive)}
+              onClick={handleNavAndScrollToForm} 
+              className={getItemClasses(isAddPageActive)} // Voice input is part of Add page
               aria-label="Use Voice Input"
-              aria-current={mounted && isMainPageActive ? "page" : undefined}
+              aria-current={mounted && isAddPageActive ? "page" : undefined}
             >
               <Mic className="h-6 w-6" />
               <span className="text-xs mt-1">Voice</span>
@@ -77,19 +77,19 @@ export function BottomNavbar() {
             </Link>
           </li>
           <li className="flex-1 h-full">
-            <button
-              onClick={() => handleNavAndScroll('guest-summary-section')}
-              className={getItemClasses(isMainPageActive)}
-              aria-label="View Summary"
-              aria-current={mounted && isMainPageActive ? "page" : undefined}
-            >
-              <ListChecks className="h-6 w-6" />
-              <span className="text-xs mt-1">Summary</span>
-            </button>
+            <Link href="/summary" passHref legacyBehavior>
+              <a
+                className={getItemClasses(isSummaryPageActive)}
+                aria-label="View Summary"
+                aria-current={mounted && isSummaryPageActive ? "page" : undefined}
+              >
+                <ListChecks className="h-6 w-6" />
+                <span className="text-xs mt-1">Summary</span>
+              </a>
+            </Link>
           </li>
         </ul>
       </div>
     </nav>
   );
 }
-
