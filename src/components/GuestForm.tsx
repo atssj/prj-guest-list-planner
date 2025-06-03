@@ -347,7 +347,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
               </FormMessage>
 
               <div className="space-y-2">
-                <FormLabel className="flex items-center gap-2"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal Type</FormLabel>
+                <FormLabel className="flex items-center gap-2"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal</FormLabel>
                 <div className="grid grid-cols-3 gap-2 items-start">
                   <FormField
                     control={form.control}
