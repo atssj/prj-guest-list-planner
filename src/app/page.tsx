@@ -7,7 +7,7 @@ import { GuestSummary } from "@/components/GuestSummary";
 import type { Guest, GuestSummaryData, FoodPreference } from "@/lib/types";
 import { INITIAL_SUMMARY } from "@/lib/types";
 
-export default function ShaadiPlannerPage() {
+export default function GuestListPlannerPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [summary, setSummary] = useState<GuestSummaryData>(INITIAL_SUMMARY);
 
@@ -52,7 +52,7 @@ export default function ShaadiPlannerPage() {
       </main>
       <footer className="text-center py-6 mt-auto">
         <p className="text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Shaadi Planner. All rights reserved.
+          &copy; {new Date().getFullYear()} Guest List Planner. All rights reserved.
         </p>
       </footer>
     </div>

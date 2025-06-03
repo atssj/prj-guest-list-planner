@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Shaadi Planner',
+  title: 'Guest List Planner',
   description: 'Effortlessly manage your guest lists for any occasion.',
 };
 
