@@ -17,10 +17,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Guest, MealPreferences, OtherMealPreference } from "@/lib/types";
-import { PlusCircle, Users, Mic, Loader2, Utensils, Salad, Beef, Grape, Wheat, Trash2 } from "lucide-react";
+import { PlusCircle, Users, Utensils, Salad, Beef, Grape, Wheat, Trash2 } from "lucide-react"; // Removed Mic, Loader2
 import { useToast } from "@/hooks/use-toast";
-import React, { useState, useRef, useEffect } from "react";
-import { parseGuestInfo } from "@/ai/flows/parse-guest-info-flow";
+import React from "react"; // Removed useState, useRef, useEffect
+// import { parseGuestInfo } from "@/ai/flows/parse-guest-info-flow"; // Removed AI flow import
 
 const otherMealPreferenceSchema = z.object({
   name: z.string().min(1, "Meal name is required."),
@@ -89,108 +89,14 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     name: "mealPreferences.otherMeals",
   });
 
-  const [isListening, setIsListening] = useState(false);
-  const [isProcessingAI, setIsProcessingAI] = useState(false);
-  const [voiceError, setVoiceError] = useState<string | null>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const [hasSpeechRecognition, setHasSpeechRecognition] = useState(false);
-
- useEffect(() => {
-    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognitionAPI) {
-      setHasSpeechRecognition(true);
-      const recognitionInstance = new SpeechRecognitionAPI();
-      recognitionInstance.continuous = false;
-      recognitionInstance.interimResults = false;
-      recognitionInstance.lang = 'en-US';
-
-      recognitionInstance.onresult = async (event: SpeechRecognitionEvent) => {
-        const transcript = event.results[event.results.length - 1][0].transcript.trim();
-        setIsListening(false);
-        if (transcript) {
-          setVoiceError(null);
-          setIsProcessingAI(true);
-          try {
-            const aiResponse = await parseGuestInfo({ transcript });
-            if (aiResponse) {
-              if (aiResponse.familyName) form.setValue("familyName", aiResponse.familyName, { shouldValidate: true, shouldDirty: true });
-              if (aiResponse.adults !== undefined) form.setValue("adults", aiResponse.adults, { shouldValidate: true, shouldDirty: true });
-              if (aiResponse.children !== undefined) form.setValue("children", aiResponse.children, { shouldValidate: true, shouldDirty: true });
-              toast({ title: "Voice Input Processed", description: "Guest details populated. Please review and add meal preferences." });
-            } else {
-              toast({ variant: "destructive", title: "AI Processing Error", description: "Could not extract details from voice." });
-            }
-          } catch (error) {
-            console.error("AI processing error:", error);
-            toast({ variant: "destructive", title: "AI Error", description: "Failed to process voice input with AI." });
-            setVoiceError("AI processing failed.");
-          } finally {
-            setIsProcessingAI(false);
-          }
-        } else {
-          setVoiceError("No speech detected or transcript is empty.");
-           toast({ variant: "destructive", title: "Voice Input Error", description: "No speech detected." });
-        }
-      };
-
-      recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error("Speech recognition error", event.error);
-        setIsListening(false);
-        setIsProcessingAI(false);
-        let errorMessage = "Voice input error.";
-        if (event.error === 'no-speech') {
-          errorMessage = "No speech was detected. Please try again.";
-        } else if (event.error === 'audio-capture') {
-          errorMessage = "Microphone problem. Please check your microphone.";
-        } else if (event.error === 'not-allowed') {
-          errorMessage = "Microphone access denied. Please allow microphone access in your browser settings.";
-        }
-        setVoiceError(errorMessage);
-        toast({ variant: "destructive", title: "Voice Input Error", description: errorMessage });
-      };
-
-      recognitionInstance.onend = () => {
-        if (isListening) {
-             setIsListening(false);
-        }
-      };
-      recognitionRef.current = recognitionInstance;
-    } else {
-      setHasSpeechRecognition(false);
-      console.warn("SpeechRecognition API not supported in this browser.");
-    }
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleToggleListening = () => {
-    if (!hasSpeechRecognition) {
-      toast({ variant: "destructive", title: "Unsupported Browser", description: "Voice input is not supported in your browser." });
-      return;
-    }
-    if (isProcessingAI) return;
-
-    if (isListening && recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else if (recognitionRef.current) {
-      setVoiceError(null);
-      try {
-        recognitionRef.current.start();
-        setIsListening(true);
-      } catch (error) {
-        console.error("Error starting speech recognition:", error);
-        setIsListening(false);
-        const errorMessage = "Could not start voice input. Please try again.";
-        setVoiceError(errorMessage);
-        toast({ variant: "destructive", title: "Voice Input Error", description: errorMessage });
-      }
-    }
-  };
+  // Voice input state and logic removed:
+  // const [isListening, setIsListening] = useState(false);
+  // const [isProcessingAI, setIsProcessingAI] = useState(false);
+  // const [voiceError, setVoiceError] = useState<string | null>(null);
+  // const recognitionRef = useRef<SpeechRecognition | null>(null);
+  // const [hasSpeechRecognition, setHasSpeechRecognition] = useState(false);
+  // useEffect for SpeechRecognitionAPI removed.
+  // handleToggleListening function removed.
 
   function onSubmit(data: GuestFormValues) {
     const guestData: Guest = {
@@ -220,30 +126,9 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
             <Users className="h-6 w-6 text-primary" />
             Add Guest
           </CardTitle>
-          {hasSpeechRecognition && (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={handleToggleListening}
-              disabled={isProcessingAI || !hasSpeechRecognition}
-              aria-label={isListening ? "Stop listening" : "Start voice input"}
-              className={isListening ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
-            >
-              {isProcessingAI ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : isListening ? (
-                <Mic className="h-5 w-5 fill-current" />
-              ) : (
-                <Mic className="h-5 w-5" />
-              )}
-            </Button>
-          )}
+          {/* Microphone button and related elements removed */}
         </div>
-        {!hasSpeechRecognition && (
-            <p className="text-xs text-muted-foreground">Voice input not supported by your browser.</p>
-        )}
-        {voiceError && <p className="text-xs text-destructive">{voiceError}</p>}
+        {/* Messages related to voice input removed */}
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -428,4 +313,3 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     </Card>
   );
 }
-
