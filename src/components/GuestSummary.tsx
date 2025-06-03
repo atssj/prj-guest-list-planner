@@ -13,6 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link"; 
+import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
+
 
 interface GuestSummaryProps {
   summary: GuestSummaryData;
@@ -21,6 +24,15 @@ interface GuestSummaryProps {
 }
 
 export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false }: GuestSummaryProps) {
+  const { toast } = useToast();
+  const [isShareApiAvailable, setIsShareApiAvailable] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      setIsShareApiAvailable(true);
+    }
+  }, []);
+
   const handlePrint = () => {
     window.print(); 
   };
@@ -35,19 +47,27 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
         });
       } catch (error: any) {
         console.error('Error sharing:', error);
-        let alertMessage = 'Sharing failed. Your browser might not support this feature or there was an error.';
+        let toastDescription = 'Sharing failed. Your browser might not support this feature or there was an error.';
         
         if (error.name === 'AbortError') {
           // User cancelled the share operation, so we don't need to show an error.
           return;
         } else if (error.name === 'NotAllowedError' || (error.message && error.message.toLowerCase().includes('permission denied'))) {
-          alertMessage = 'Sharing failed. It seems permission to share was denied or the action was not allowed. Please check your browser settings or try again.';
+          toastDescription = 'Sharing failed. It seems permission to share was denied or the action was not allowed. Please check your browser settings or try again.';
         }
         
-        alert(alertMessage);
+        toast({
+          title: "Sharing Issue",
+          description: toastDescription,
+          variant: "default", 
+        });
       }
     } else {
-      alert('Share functionality is not supported in your browser. You can manually copy the details.');
+      toast({
+        title: "Sharing Not Supported",
+        description: 'Share functionality is not supported in your browser. You can manually copy the details.',
+        variant: "default",
+      });
     }
   };
 
@@ -162,7 +182,7 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
                     Go to Print Preview
                   </DropdownMenuItem>
                 </Link>
-                {navigator.share && ( // Conditionally render share if API is available
+                {isShareApiAvailable && ( 
                     <DropdownMenuItem onClick={handleShare}>
                         <Share2 className="mr-2 h-4 w-4" />
                         Share Summary
