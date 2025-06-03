@@ -38,35 +38,37 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
   };
 
   const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Guest List Summary',
-          text: `Here's the guest list summary: ${summary.totalGuests} guests. Adults: ${summary.totalAdults}, Children: ${summary.totalChildren}.`,
-          // url: window.location.href // Optional: you can share the current page URL
-        });
-      } catch (error: any) {
-        console.error('Error sharing:', error);
-        let toastDescription = 'Sharing failed. Your browser might not support this feature or there was an error.';
-        
-        if (error.name === 'AbortError') {
-          // User cancelled the share operation, so we don't need to show an error.
-          return;
-        } else if (error.name === 'NotAllowedError' || (error.message && error.message.toLowerCase().includes('permission denied'))) {
-          toastDescription = 'Sharing failed. It seems permission to share was denied or the action was not allowed. Please check your browser settings or try again.';
-        }
-        
-        toast({
-          title: "Sharing Issue",
-          description: toastDescription,
-          variant: "default", 
-        });
-      }
-    } else {
+    if (!isShareApiAvailable) { // Should ideally not be called if button is hidden, but good safeguard
       toast({
         title: "Sharing Not Supported",
-        description: 'Share functionality is not supported in your browser. You can manually copy the details.',
+        description: 'Share functionality is not available in your browser.',
         variant: "default",
+      });
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: 'Guest List Summary',
+        text: `Here's the guest list summary: ${summary.totalGuests} guests. Adults: ${summary.totalAdults}, Children: ${summary.totalChildren}.`,
+        // url: window.location.href // Optional: you can share the current page URL
+      });
+    } catch (error: any) {
+      console.error('Error sharing:', error);
+      let toastDescription = 'Sharing failed. Your browser might not support this feature or there was an error.';
+      
+      // Check if error object and its properties exist before accessing them
+      if (error && error.name === 'AbortError') {
+        // User cancelled the share operation, so we don't need to show an error.
+        return;
+      } else if (error && (error.name === 'NotAllowedError' || (typeof error.message === 'string' && error.message.toLowerCase().includes('permission denied')))) {
+        toastDescription = 'Sharing failed. It seems permission to share was denied or the action was not allowed. Please check your browser settings or try again.';
+      }
+      
+      toast({
+        title: "Sharing Issue",
+        description: toastDescription,
+        variant: "default", 
       });
     }
   };
@@ -196,3 +198,4 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
     </Card>
   );
 }
+
