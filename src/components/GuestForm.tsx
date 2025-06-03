@@ -219,7 +219,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
         <div className="flex justify-between items-center">
           <CardTitle className="font-headline text-2xl flex items-center gap-2">
             <Users className="h-6 w-6 text-primary" />
-            Add Guest Family
+            Add Guest
           </CardTitle>
           {hasSpeechRecognition && (
             <Button
@@ -400,7 +400,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                   onClick={() => append({ name: "", count: 1 })}
                   className="w-full"
                 >
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add Other Meal Type
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add Other Meal
                 </Button>
                  {form.formState.errors.mealPreferences?.otherMeals?.root?.message && (
                     <FormMessage>{form.formState.errors.mealPreferences.otherMeals.root.message}</FormMessage>
