@@ -4,7 +4,7 @@
 import type React from 'react';
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Users, Salad, Beef, Grape, Wheat } from "lucide-react";
+import { ArrowLeft, Users, Salad, Beef, Grape, Wheat, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Guest, OtherMealPreference } from "@/lib/types";
+import { AuthDialog } from "@/components/AuthDialog"; // Import AuthDialog
 
 // Ensure this key is consistent with the one used in src/app/page.tsx
 const GUEST_LIST_STORAGE_KEY = "guestListData_v3";
@@ -24,6 +25,7 @@ const GUEST_LIST_STORAGE_KEY = "guestListData_v3";
 export default function GuestListPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false); // State for AuthDialog
 
   useEffect(() => {
     const storedGuests = localStorage.getItem(GUEST_LIST_STORAGE_KEY);
@@ -43,6 +45,12 @@ export default function GuestListPage() {
   const formatOtherMeals = (otherMeals: OtherMealPreference[] | undefined) => {
     if (!otherMeals || otherMeals.length === 0) return "N/A";
     return otherMeals.map(meal => `${meal.name} (${meal.count})`).join(", ");
+  };
+
+  const handleSaveListClick = () => {
+    // For now, this just opens the AuthDialog.
+    // Actual saving logic would depend on Firebase auth state.
+    setIsAuthDialogOpen(true);
   };
 
   if (isLoading) {
@@ -65,7 +73,10 @@ export default function GuestListPage() {
           <h1 className="text-2xl sm:text-3xl font-headline text-primary text-center flex-grow">
             Guest List Preview
           </h1>
-          <div className="w-10"> {/* Spacer for balance */}</div>
+          <Button variant="outline" onClick={handleSaveListClick} className="ml-auto">
+            <Save className="mr-2 h-4 w-4" />
+            Save List
+          </Button>
         </div>
       </header>
 
@@ -131,6 +142,14 @@ export default function GuestListPage() {
           &copy; {new Date().getFullYear()} Guest List Planner. Preview Page.
         </p>
       </footer>
+      <AuthDialog
+        isOpen={isAuthDialogOpen}
+        onClose={() => setIsAuthDialogOpen(false)}
+        onLinkSent={(email) => {
+          // Handle post-link sent logic if needed, e.g., close dialog.
+          // The dialog itself shows a toast.
+        }}
+      />
     </div>
   );
 }
