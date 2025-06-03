@@ -3,6 +3,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { BottomNavbar } from '@/components/BottomNavbar';
+import FooterNote from '@/components/FooterNote';
 
 export const metadata: Metadata = {
   title: 'Guest List Planner - Effortless Event Guest Management',
@@ -28,6 +29,7 @@ export default function RootLayout({
         </div>
         <Toaster /> {/* Ensure Toaster is here for AuthDialog toasts */}
         <BottomNavbar />
+        <FooterNote />
       </body>
     </html>
   );

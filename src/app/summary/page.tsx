@@ -110,11 +110,6 @@ export default function SummaryPage() {
             </Link>
         </div>
       </main>
-       <footer className="text-center py-6 mt-auto">
-        <p className="text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Guest List Planner. Summary Page.
-        </p>
-      </footer>
       <AuthDialog
         isOpen={isAuthDialogOpen}
         onClose={() => setIsAuthDialogOpen(false)}

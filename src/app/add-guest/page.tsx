@@ -69,11 +69,6 @@ export default function AddGuestPage() {
           <GuestForm onAddGuest={handleAddGuest} />
         </div>
       </main>
-      <footer className="text-center py-6 mt-auto">
-        <p className="text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Guest List Planner. Add Guests.
-        </p>
-      </footer>
     </div>
   );
 }
