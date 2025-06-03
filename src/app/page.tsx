@@ -176,7 +176,7 @@ export default function GuestListPlannerPage() {
           <GuestForm onAddGuest={handleAddGuest} />
         </div>
         <div id="guest-summary-section" className="lg:col-span-3 scroll-mt-20">
-          <GuestSummary summary={summary} />
+          <GuestSummary summary={summary} onSaveListClick={handleSaveListClick} />
         </div>
       </main>
       <footer className="text-center py-6 mt-auto">

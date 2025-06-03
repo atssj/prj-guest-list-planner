@@ -4,23 +4,33 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { GuestSummaryData } from "@/lib/types";
-import { Users, Baby, UtensilsCrossed, ListChecks, Salad, Beef, Grape, Wheat } from "lucide-react"; // Replaced specific icons
+import { Users, Baby, UtensilsCrossed, ListChecks, Salad, Beef, Grape, Wheat, Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface GuestSummaryProps {
   summary: GuestSummaryData;
+  onSaveListClick?: () => void;
 }
 
-// foodPreferenceIcons is no longer needed in the same way. We'll use icons directly.
-
-export function GuestSummary({ summary }: GuestSummaryProps) {
+export function GuestSummary({ summary, onSaveListClick }: GuestSummaryProps) {
   return (
     <Card className="shadow-lg animate-in fade-in-50 duration-500">
       <CardHeader>
-        <CardTitle className="font-headline text-2xl flex items-center gap-2">
-          <ListChecks className="h-6 w-6 text-primary" />
-          Guest Summary
-        </CardTitle>
-        <CardDescription>Real-time overview of your guest list.</CardDescription>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="font-headline text-2xl flex items-center gap-2">
+              <ListChecks className="h-6 w-6 text-primary" />
+              Guest Summary
+            </CardTitle>
+            <CardDescription>Real-time overview of your guest list.</CardDescription>
+          </div>
+          {onSaveListClick && (
+            <Button variant="outline" onClick={onSaveListClick} className="shadow-md ml-auto shrink-0">
+              <Save className="mr-2 h-4 w-4" />
+              Save List
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex justify-between items-center p-3 bg-secondary/30 rounded-md">
