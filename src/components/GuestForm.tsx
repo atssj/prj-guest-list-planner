@@ -193,7 +193,6 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
   };
 
   function onSubmit(data: GuestFormValues) {
-    // Ensure otherMeals is an array, even if undefined from the form
     const guestData: Guest = {
       ...data,
       mealPreferences: {
@@ -248,7 +247,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="familyName"
@@ -291,7 +290,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
               />
             </div>
             
-            <div className="space-y-4 border p-4 rounded-md shadow-sm bg-card">
+            <div className="space-y-3 border p-3 rounded-md shadow-sm bg-card">
               <div className="flex items-center gap-2 mb-2">
                 <Utensils className="h-5 w-5 text-primary" />
                 <h3 className="text-lg font-medium">Meal Preferences</h3>
@@ -348,10 +347,10 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                 {form.formState.errors.mealPreferences?.childMeal?.message}
               </FormMessage>
               
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <FormLabel className="flex items-center gap-2"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal(s)</FormLabel>
                 {fields.map((item, index) => (
-                  <div key={item.id} className="space-y-2 p-3 border rounded-md bg-background/50 shadow-inner">
+                  <div key={item.id} className="p-2 border rounded-md bg-background/50 shadow-inner">
                     <div className="grid grid-cols-10 gap-2 items-center">
                       <FormField
                         control={form.control}
@@ -419,7 +418,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                </FormMessage>
             </div>
 
-            <Button type="submit" className="w-full text-lg py-6 bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button type="submit" className="w-full text-lg py-4 bg-accent hover:bg-accent/90 text-accent-foreground">
               <PlusCircle className="mr-2 h-5 w-5" />
               Add Guest
             </Button>
@@ -429,3 +428,4 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     </Card>
   );
 }
+
