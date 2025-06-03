@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -107,5 +108,140 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Print-specific styles */
+@media print {
+  body {
+    -webkit-print-color-adjust: exact; /* Chrome, Safari */
+    print-color-adjust: exact; /* Firefox, Edge */
+    font-size: 10pt; /* Adjust base font size for print if needed */
+    background-color: #fff !important; /* Ensure white background for print */
+    color: #000 !important; /* Ensure black text for print */
+  }
+
+  .print-hide {
+    display: none !important;
+  }
+  
+  .print-preview-page header.print-hide,
+  .print-preview-page .print-hide-empty-list,
+  .print-preview-page .print-hide {
+    display: none !important;
+  }
+  
+  .print-only-title {
+    display: block !important; /* Ensure this title is visible only for print */
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem; /* Adjust as needed */
+  }
+
+  /* Hide specific components globally for print */
+  nav.fixed, /* BottomNavbar */
+  header.py-2, /* AppHeader (can be more specific if needed) */
+  footer > p.text-center, /* FooterNote */
+  .ToastViewport, /* Toasts */
+  .AuthDialog, /* Auth Dialog */
+  .print-preview-page .print-hide-empty-list {
+    display: none !important;
+  }
+
+
+  /* Adjust card styling for print */
+  .print-card, .print-card-summary {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important; /* Light border for cards */
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+  }
+  .print-card-summary .print-card-header,
+  .print-card-summary .print-card-content {
+     padding: 0.5rem !important;
+  }
+
+  .print-card-header {
+    padding-bottom: 0.25rem !important;
+  }
+
+  .print-card-content {
+    padding-top: 0.25rem !important;
+    overflow: visible !important; /* Ensure table content isn't cut off */
+  }
+  
+  .print-card-summary .bg-secondary\/30 {
+    background-color: #f0f0f0 !important; /* Lighter background for these sections */
+  }
+  .print-card-summary .bg-primary {
+    background-color: #e0e0e0 !important; /* Even lighter for primary highlight */
+    color: #000 !important;
+  }
+   .print-card-summary .text-primary {
+    color: #333 !important;
+   }
+   .print-card-summary .text-primary-foreground {
+     color: #000 !important;
+   }
+
+
+  /* Table specific adjustments */
+  .print-preview-page table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  .print-preview-page th, .print-preview-page td {
+    border: 1px solid #ddd !important;
+    padding: 4px 6px !important; /* Smaller padding for print */
+    font-size: 9pt !important;
+    page-break-inside: avoid !important; /* Try to keep rows from splitting */
+  }
+  .print-preview-page th {
+    background-color: #f8f8f8 !important; /* Light grey for table headers */
+  }
+  .print-preview-page .min-w-\[120px\], 
+  .print-preview-page .min-w-\[150px\], 
+  .print-preview-page .min-w-\[200px\] {
+    min-width: auto !important; /* Remove min-width for print */
+  }
+
+  /* Ensure icons in table headers are still somewhat visible but not too dominant */
+  .print-preview-page th svg {
+    height: 0.8em !important;
+    width: 0.8em !important;
+    margin-right: 0.2em !important;
+    display: inline-block !important; /* Ensure they stay inline */
+    vertical-align: middle !important;
+  }
+  
+  .print-meal-counts {
+     margin-top: 1rem;
+  }
+  .print-meal-counts h3 {
+    font-size: 1.1rem;
+  }
+  .print-meal-counts .border-b {
+     border-bottom-width: 1px !important;
+     border-color: #eee !important;
+  }
+  .print-meal-counts .p-2 {
+    padding: 0.25rem !important;
+  }
+  .print-meal-counts svg {
+    height: 1em !important;
+    width: 1em !important;
+  }
+
+  /* Hide the footer of the GuestSummary component specifically */
+  .print-card-summary > .print-hide { 
+    display: none !important;
+  }
+
+  /* Ensure page breaks are handled reasonably */
+  section {
+    page-break-inside: avoid;
+  }
+  
+  @page {
+    margin: 0.75in; /* Adjust page margins */
   }
 }
