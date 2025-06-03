@@ -10,7 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { FOOD_PREFERENCES } from '@/lib/types';
+// FOOD_PREFERENCES is no longer used here as AI won't parse food preferences.
 
 const ParseGuestInfoInputSchema = z.object({
   transcript: z.string().describe("The text transcript of the user's voice input."),
@@ -21,7 +21,7 @@ const ParseGuestInfoOutputSchema = z.object({
   familyName: z.string().optional().describe("The extracted family name, e.g., 'The Sharma Family' or 'John Doe'."),
   adults: z.number().int().min(0).optional().describe("The number of adults."),
   children: z.number().int().min(0).optional().describe("The number of children."),
-  foodPreference: z.enum(FOOD_PREFERENCES).optional().describe(`The food preference. Must be one of: ${FOOD_PREFERENCES.join(', ')}.`),
+  // foodPreference field is removed as AI will not parse this detail anymore.
 });
 export type ParseGuestInfoOutput = z.infer<typeof ParseGuestInfoOutputSchema>;
 
@@ -38,20 +38,19 @@ The user will provide a spoken phrase as a transcript. Your task is to extract t
 - Family Name (e.g., "The Sharma Family", "John Doe and family", "My friend Priya")
 - Number of Adults
 - Number of Children
-- Food Preference. This must be one of the following exact values: ${FOOD_PREFERENCES.join(', ')}.
 
 If a detail is not clearly mentioned, do not include it in your output.
 If a number is mentioned for adults or children, convert it to an integer.
-For food preference, ensure the output strictly matches one of the allowed values.
+Do NOT attempt to extract food or meal preferences.
 
 User input transcript: "{{{transcript}}}"
 
 Extract the information and provide it in the structured output format.
-Example: If user says "The Patel family, 2 adults, 1 child, vegetarian", you should output:
-{ familyName: "The Patel family", adults: 2, children: 1, foodPreference: "vegetarian" }
+Example: If user says "The Patel family, 2 adults, 1 child, they like vegetarian food", you should output:
+{ familyName: "The Patel family", adults: 2, children: 1 }
 
-Example: If user says "Riya and Simran, 2 adults, non-vegetarian", you should output:
-{ familyName: "Riya and Simran", adults: 2, foodPreference: "nonVegetarian" }
+Example: If user says "Riya and Simran, 2 adults", you should output:
+{ familyName: "Riya and Simran", adults: 2 }
 
 Example: If user says "Just my cousin anjali", you should output:
 { familyName: "My cousin Anjali", adults: 1 } (Assuming 1 adult if not specified with a family name)

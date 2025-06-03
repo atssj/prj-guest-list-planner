@@ -1,21 +1,16 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { FOOD_PREFERENCES, type GuestSummaryData, type FoodPreference } from "@/lib/types";
-import { formatFoodPreference } from "@/lib/utils";
-import { Users, Baby, UtensilsCrossed, Leaf, Drumstick, Sparkles, ListChecks } from "lucide-react";
+import type { GuestSummaryData } from "@/lib/types";
+import { Users, Baby, UtensilsCrossed, ListChecks, Salad, Beef, Grape, Wheat } from "lucide-react"; // Replaced specific icons
 
 interface GuestSummaryProps {
   summary: GuestSummaryData;
 }
 
-const foodPreferenceIcons: Record<FoodPreference, React.ElementType> = {
-  vegetarian: Leaf,
-  nonVegetarian: Drumstick,
-  jain: Sparkles, // Using Sparkles as a metaphor for special/pure
-  vegan: Leaf, // Could use a different icon if distinction is highly needed
-};
+// foodPreferenceIcons is no longer needed in the same way. We'll use icons directly.
 
 export function GuestSummary({ summary }: GuestSummaryProps) {
   return (
@@ -57,21 +52,37 @@ export function GuestSummary({ summary }: GuestSummaryProps) {
         <div>
           <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 font-headline text-primary">
             <UtensilsCrossed className="h-5 w-5" />
-            Food Preferences Breakdown
+            Meal Counts Breakdown
           </h3>
           <div className="space-y-2">
-            {FOOD_PREFERENCES.map((pref) => {
-              const IconComponent = foodPreferenceIcons[pref as FoodPreference];
-              return (
-                <div key={pref} className="flex justify-between items-center p-2 border-b last:border-b-0">
-                  <div className="flex items-center gap-2">
-                    <IconComponent className="h-5 w-5 text-muted-foreground" />
-                    <span>{formatFoodPreference(pref as FoodPreference)}</span>
-                  </div>
-                  <span className="font-medium">{summary.foodPreferences[pref as FoodPreference]}</span>
-                </div>
-              );
-            })}
+            <div className="flex justify-between items-center p-2 border-b">
+              <div className="flex items-center gap-2">
+                <Salad className="h-5 w-5 text-green-600" />
+                <span>Vegetarian Meals</span>
+              </div>
+              <span className="font-medium">{summary.mealCounts.veg}</span>
+            </div>
+            <div className="flex justify-between items-center p-2 border-b">
+              <div className="flex items-center gap-2">
+                <Beef className="h-5 w-5 text-red-600" />
+                <span>Non-Vegetarian Meals</span>
+              </div>
+              <span className="font-medium">{summary.mealCounts.nonVeg}</span>
+            </div>
+            <div className="flex justify-between items-center p-2 border-b">
+              <div className="flex items-center gap-2">
+                <Grape className="h-5 w-5 text-purple-600" /> 
+                <span>Child Meals</span>
+              </div>
+              <span className="font-medium">{summary.mealCounts.childMeal}</span>
+            </div>
+            <div className="flex justify-between items-center p-2 border-b last:border-b-0">
+              <div className="flex items-center gap-2">
+                <Wheat className="h-5 w-5 text-yellow-600" />
+                <span>Other Meals</span>
+              </div>
+              <span className="font-medium">{summary.mealCounts.other}</span>
+            </div>
           </div>
         </div>
       </CardContent>

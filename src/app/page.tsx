@@ -5,52 +5,46 @@ import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { GuestForm } from "@/components/GuestForm";
 import { GuestSummary } from "@/components/GuestSummary";
-import type { Guest, GuestSummaryData, FoodPreference } from "@/lib/types";
+import type { Guest, GuestSummaryData } from "@/lib/types";
 import { INITIAL_SUMMARY } from "@/lib/types";
 
-const GUEST_LIST_STORAGE_KEY = "guestListData_v1";
+const GUEST_LIST_STORAGE_KEY = "guestListData_v2"; // Version incremented due to data structure change
 
 export default function GuestListPlannerPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [summary, setSummary] = useState<GuestSummaryData>(INITIAL_SUMMARY);
 
-  // Load guests from localStorage on initial client-side render
   useEffect(() => {
     const storedGuests = localStorage.getItem(GUEST_LIST_STORAGE_KEY);
     if (storedGuests) {
       try {
         const parsedGuests = JSON.parse(storedGuests) as Guest[];
-        // Basic validation: check if it's an array
-        if (Array.isArray(parsedGuests)) {
-          // You could add more detailed validation here if needed,
-          // e.g., checking if objects have the required Guest properties.
+        if (Array.isArray(parsedGuests) && parsedGuests.every(g => typeof g.mealPreferences === 'object')) {
           setGuests(parsedGuests);
         } else {
-          localStorage.removeItem(GUEST_LIST_STORAGE_KEY); // Clear invalid data
+          // Invalid structure or old data, clear it
+          localStorage.removeItem(GUEST_LIST_STORAGE_KEY);
         }
       } catch (error) {
-        localStorage.removeItem(GUEST_LIST_STORAGE_KEY); // Clear corrupted data
+        localStorage.removeItem(GUEST_LIST_STORAGE_KEY); 
       }
     }
-  }, []); // Empty dependency array: runs only once on mount (client-side)
+  }, []);
 
-  // Update summary when guests change
   useEffect(() => {
     let totalAdults = 0;
     let totalChildren = 0;
-    const foodPreferencesCount: Record<FoodPreference, number> = {
-      vegetarian: 0,
-      nonVegetarian: 0,
-      jain: 0,
-      vegan: 0,
-    };
+    const newMealCounts = { veg: 0, nonVeg: 0, childMeal: 0, other: 0 };
 
     guests.forEach((guest) => {
       totalAdults += guest.adults;
       totalChildren += guest.children;
-      // Ensure foodPreference is a valid key before incrementing
-      if (guest.foodPreference && foodPreferencesCount.hasOwnProperty(guest.foodPreference)) {
-        foodPreferencesCount[guest.foodPreference]++;
+      
+      if (guest.mealPreferences) {
+        newMealCounts.veg += guest.mealPreferences.veg || 0;
+        newMealCounts.nonVeg += guest.mealPreferences.nonVeg || 0;
+        newMealCounts.childMeal += guest.mealPreferences.childMeal || 0;
+        newMealCounts.other += guest.mealPreferences.otherCount || 0;
       }
     });
 
@@ -58,15 +52,11 @@ export default function GuestListPlannerPage() {
       totalAdults,
       totalChildren,
       totalGuests: totalAdults + totalChildren,
-      foodPreferences: foodPreferencesCount,
+      mealCounts: newMealCounts,
     });
   }, [guests]);
 
-  // Save guests to localStorage when guests change
   useEffect(() => {
-    // This effect runs after the initial render and whenever 'guests' state changes.
-    // It ensures that if guests were loaded from localStorage, they are not immediately
-    // overwritten by an empty array if the load effect updates 'guests' state.
     localStorage.setItem(GUEST_LIST_STORAGE_KEY, JSON.stringify(guests));
   }, [guests]);
 

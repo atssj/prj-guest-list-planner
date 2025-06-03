@@ -8,38 +8,65 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FOOD_PREFERENCES, type FoodPreference, type Guest } from "@/lib/types";
-import { formatFoodPreference } from "@/lib/utils";
-import { PlusCircle, Users, Mic, Loader2 } from "lucide-react";
+import type { Guest, MealPreferences } from "@/lib/types";
+import { PlusCircle, Users, Mic, Loader2, Utensils, Salad, Beef, Grape, Wheat } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useRef, useEffect } from "react";
-import { parseGuestInfo, ParseGuestInfoOutput } from "@/ai/flows/parse-guest-info-flow";
+import { parseGuestInfo } from "@/ai/flows/parse-guest-info-flow";
+
+const mealPreferencesSchema = z.object({
+  veg: z.coerce.number().min(0, "Cannot be negative").int("Must be a whole number"),
+  nonVeg: z.coerce.number().min(0, "Cannot be negative").int("Must be a whole number"),
+  childMeal: z.coerce.number().min(0, "Cannot be negative").int("Must be a whole number"),
+  otherName: z.string().optional(),
+  otherCount: z.coerce.number().min(0, "Cannot be negative").int("Must be a whole number").optional(),
+}).refine(
+  (data) => {
+    const hasOtherName = !!data.otherName?.trim();
+    const hasOtherCount = typeof data.otherCount === 'number' && data.otherCount > 0;
+    if (hasOtherName && !hasOtherCount) return false;
+    if (!hasOtherName && hasOtherCount) return false;
+    return true;
+  },
+  {
+    message: "If specifying an 'Other' meal, provide both name and a count greater than 0.",
+    path: ["otherName"], 
+  }
+);
 
 const guestFormSchema = z.object({
   familyName: z.string().min(1, "Family name is required."),
   adults: z.coerce.number().min(0, "Number of adults must be 0 or more.").int(),
   children: z.coerce.number().min(0, "Number of children must be 0 or more.").int(),
-  foodPreference: z.enum(FOOD_PREFERENCES, {
-    required_error: "Please select a food preference.",
-  }),
-}).refine((data) => data.adults + data.children > 0, {
+  mealPreferences: mealPreferencesSchema,
+})
+.refine((data) => data.adults + data.children > 0, {
   message: "At least one guest (adult or child) is required.",
-  path: ["adults"], 
-});
+  path: ["adults"],
+})
+.refine(
+  (data) => {
+    const totalPeople = data.adults + data.children;
+    const totalMeals =
+      (data.mealPreferences.veg || 0) +
+      (data.mealPreferences.nonVeg || 0) +
+      (data.mealPreferences.childMeal || 0) +
+      (data.mealPreferences.otherCount || 0);
+    return totalMeals === totalPeople;
+  },
+  {
+    message: "Total number of meals must equal the total number of adults and children.",
+    path: ["mealPreferences.veg"], // Attach error to the first meal field for simplicity
+  }
+);
 
 type GuestFormValues = z.infer<typeof guestFormSchema>;
 
@@ -55,7 +82,13 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
       familyName: "",
       adults: 0,
       children: 0,
-      foodPreference: undefined,
+      mealPreferences: {
+        veg: 0,
+        nonVeg: 0,
+        childMeal: 0,
+        otherName: "",
+        otherCount: 0,
+      },
     },
   });
 
@@ -65,7 +98,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const [hasSpeechRecognition, setHasSpeechRecognition] = useState(false);
 
-  useEffect(() => {
+ useEffect(() => {
     const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognitionAPI) {
       setHasSpeechRecognition(true);
@@ -83,12 +116,11 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
           try {
             const aiResponse = await parseGuestInfo({ transcript });
             if (aiResponse) {
-              // Populate form fields if values are present in AI response
               if (aiResponse.familyName) form.setValue("familyName", aiResponse.familyName, { shouldValidate: true, shouldDirty: true });
               if (aiResponse.adults !== undefined) form.setValue("adults", aiResponse.adults, { shouldValidate: true, shouldDirty: true });
               if (aiResponse.children !== undefined) form.setValue("children", aiResponse.children, { shouldValidate: true, shouldDirty: true });
-              if (aiResponse.foodPreference) form.setValue("foodPreference", aiResponse.foodPreference, { shouldValidate: true, shouldDirty: true });
-              toast({ title: "Voice Input Processed", description: "Form fields populated. Please review and submit." });
+              // AI no longer parses food preference, so no population for that.
+              toast({ title: "Voice Input Processed", description: "Guest details populated. Please review and add meal preferences." });
             } else {
               toast({ variant: "destructive", title: "AI Processing Error", description: "Could not extract details from voice." });
             }
@@ -122,7 +154,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
       };
 
       recognitionInstance.onend = () => {
-        if (isListening) { // Only set isListening to false if it was onend that stopped it, not user click
+        if (isListening) {
              setIsListening(false);
         }
       };
@@ -137,7 +169,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // isListening removed to prevent re-initialization on listening state change
+  }, []);
 
   const handleToggleListening = () => {
     if (!hasSpeechRecognition) {
@@ -150,12 +182,11 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
       recognitionRef.current.stop();
       setIsListening(false);
     } else if (recognitionRef.current) {
-      setVoiceError(null); // Clear previous errors
+      setVoiceError(null);
       try {
         recognitionRef.current.start();
         setIsListening(true);
       } catch (error) {
-        // This catch is for synchronous errors during .start() like "recognition busy"
         console.error("Error starting speech recognition:", error);
         setIsListening(false);
         const errorMessage = "Could not start voice input. Please try again.";
@@ -166,13 +197,18 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
   };
 
   function onSubmit(data: GuestFormValues) {
-    onAddGuest(data as Guest);
+    onAddGuest(data as Guest); // Type assertion, ensure GuestFormValues matches Guest
     toast({
       title: "Guest Added",
       description: `${data.familyName} family has been added to the list.`,
     });
     form.reset();
   }
+
+  // Watch adult and children counts to provide a hint for meal counts
+  const adultsCount = form.watch("adults");
+  const childrenCount = form.watch("children");
+  const totalPeople = (adultsCount || 0) + (childrenCount || 0);
 
   return (
     <Card className="shadow-lg w-full max-w-md mx-auto">
@@ -251,30 +287,100 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="foodPreference"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Food Preference</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""} defaultValue={field.value}>
+            
+            <div className="space-y-4 border p-4 rounded-md shadow-sm bg-card">
+              <div className="flex items-center gap-2 mb-2">
+                <Utensils className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-medium">Meal Preferences</h3>
+              </div>
+              <FormDescription>
+                Total meals should sum up to {totalPeople} (total adults + children).
+              </FormDescription>
+
+              <FormField
+                control={form.control}
+                name="mealPreferences.veg"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <FormLabel className="flex items-center gap-2"><Salad className="h-4 w-4 text-green-600"/>Vegetarian</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a food preference" />
-                      </SelectTrigger>
+                      <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
                     </FormControl>
-                    <SelectContent>
-                      {FOOD_PREFERENCES.map((pref) => (
-                        <SelectItem key={pref} value={pref}>
-                          {formatFoodPreference(pref as FoodPreference)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  </FormItem>
+                )}
+              />
+               <FormMessage className="text-right -mt-3">
+                {form.formState.errors.mealPreferences?.veg?.message}
+              </FormMessage>
+
+
+              <FormField
+                control={form.control}
+                name="mealPreferences.nonVeg"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <FormLabel className="flex items-center gap-2"><Beef className="h-4 w-4 text-red-600"/>Non-Vegetarian</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormMessage className="text-right -mt-3">
+                {form.formState.errors.mealPreferences?.nonVeg?.message}
+              </FormMessage>
+
+              <FormField
+                control={form.control}
+                name="mealPreferences.childMeal"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <FormLabel className="flex items-center gap-2"><Grape className="h-4 w-4 text-purple-600"/>Child Meal</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormMessage className="text-right -mt-3">
+                {form.formState.errors.mealPreferences?.childMeal?.message}
+              </FormMessage>
+
+              <div className="space-y-2">
+                <FormLabel className="flex items-center gap-2"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal Type</FormLabel>
+                <div className="grid grid-cols-3 gap-2 items-start">
+                  <FormField
+                    control={form.control}
+                    name="mealPreferences.otherName"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormControl>
+                          <Input placeholder="Meal Name" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="mealPreferences.otherCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input type="number" placeholder="0" {...field} min="0" className="text-center" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                 <FormMessage>
+                  {form.formState.errors.mealPreferences?.otherName?.message || form.formState.errors.mealPreferences?.otherCount?.message}
+                </FormMessage>
+              </div>
+               <FormMessage>
+                { (form.formState.errors.mealPreferences as any)?.veg?.message && (form.formState.errors.mealPreferences as any)?.veg.type === 'custom' ? (form.formState.errors.mealPreferences as any)?.veg.message : null}
+               </FormMessage>
+            </div>
+
             <Button type="submit" className="w-full text-lg py-6 bg-accent hover:bg-accent/90 text-accent-foreground">
               <PlusCircle className="mr-2 h-5 w-5" />
               Add Guest
