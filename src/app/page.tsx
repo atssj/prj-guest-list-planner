@@ -79,10 +79,10 @@ export default function GuestListPlannerPage() {
     <div className="container mx-auto px-4 py-2 md:px-6 md:py-4 flex flex-col flex-grow">
       <AppHeader />
       <main className="mt-6 md:mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8 flex-grow">
-        <div className="lg:col-span-2">
+        <div id="guest-form-section" className="lg:col-span-2 scroll-mt-20">
           <GuestForm onAddGuest={handleAddGuest} />
         </div>
-        <div className="lg:col-span-3">
+        <div id="guest-summary-section" className="lg:col-span-3 scroll-mt-20">
           <GuestSummary summary={summary} />
         </div>
       </main>
