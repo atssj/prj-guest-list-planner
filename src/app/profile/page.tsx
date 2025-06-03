@@ -61,7 +61,7 @@ export default function ProfilePage() {
             </div>
             <div className="mt-8 flex justify-center">
                  <Link href="/" passHref>
-                    <Button variant="outline">
+                    <Button variant="default"> {/* Changed variant to default */}
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back to Planner
                     </Button>
@@ -79,3 +79,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
