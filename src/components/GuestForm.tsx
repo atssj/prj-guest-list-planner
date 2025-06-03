@@ -2,7 +2,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,31 +16,23 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Guest, MealPreferences } from "@/lib/types";
-import { PlusCircle, Users, Mic, Loader2, Utensils, Salad, Beef, Grape, Wheat } from "lucide-react";
+import type { Guest, MealPreferences, OtherMealPreference } from "@/lib/types";
+import { PlusCircle, Users, Mic, Loader2, Utensils, Salad, Beef, Grape, Wheat, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useRef, useEffect } from "react";
 import { parseGuestInfo } from "@/ai/flows/parse-guest-info-flow";
+
+const otherMealPreferenceSchema = z.object({
+  name: z.string().min(1, "Meal name is required."),
+  count: z.coerce.number().min(1, "Count must be at least 1.").int("Must be a whole number."),
+});
 
 const mealPreferencesSchema = z.object({
   veg: z.coerce.number().min(0, "Cannot be negative").int("Must be a whole number"),
   nonVeg: z.coerce.number().min(0, "Cannot be negative").int("Must be a whole number"),
   childMeal: z.coerce.number().min(0, "Cannot be negative").int("Must be a whole number"),
-  otherName: z.string().optional(),
-  otherCount: z.coerce.number().min(0, "Cannot be negative").int("Must be a whole number").optional(),
-}).refine(
-  (data) => {
-    const hasOtherName = !!data.otherName?.trim();
-    const hasOtherCount = typeof data.otherCount === 'number' && data.otherCount > 0;
-    if (hasOtherName && !hasOtherCount) return false;
-    if (!hasOtherName && hasOtherCount) return false;
-    return true;
-  },
-  {
-    message: "If specifying an 'Other' meal, provide both name and a count greater than 0.",
-    path: ["otherName"], 
-  }
-);
+  otherMeals: z.array(otherMealPreferenceSchema).optional(),
+});
 
 const guestFormSchema = z.object({
   familyName: z.string().min(1, "Family name is required."),
@@ -55,16 +47,17 @@ const guestFormSchema = z.object({
 .refine(
   (data) => {
     const totalPeople = data.adults + data.children;
+    const otherMealsCount = data.mealPreferences.otherMeals?.reduce((sum, meal) => sum + (meal.count || 0), 0) || 0;
     const totalMeals =
       (data.mealPreferences.veg || 0) +
       (data.mealPreferences.nonVeg || 0) +
       (data.mealPreferences.childMeal || 0) +
-      (data.mealPreferences.otherCount || 0);
+      otherMealsCount;
     return totalMeals === totalPeople;
   },
   {
     message: "Total number of meals must equal the total number of adults and children.",
-    path: ["mealPreferences.veg"], // Attach error to the first meal field for simplicity
+    path: ["mealPreferences.veg"], 
   }
 );
 
@@ -86,10 +79,14 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
         veg: 0,
         nonVeg: 0,
         childMeal: 0,
-        otherName: "",
-        otherCount: 0,
+        otherMeals: [],
       },
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "mealPreferences.otherMeals",
   });
 
   const [isListening, setIsListening] = useState(false);
@@ -119,7 +116,6 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
               if (aiResponse.familyName) form.setValue("familyName", aiResponse.familyName, { shouldValidate: true, shouldDirty: true });
               if (aiResponse.adults !== undefined) form.setValue("adults", aiResponse.adults, { shouldValidate: true, shouldDirty: true });
               if (aiResponse.children !== undefined) form.setValue("children", aiResponse.children, { shouldValidate: true, shouldDirty: true });
-              // AI no longer parses food preference, so no population for that.
               toast({ title: "Voice Input Processed", description: "Guest details populated. Please review and add meal preferences." });
             } else {
               toast({ variant: "destructive", title: "AI Processing Error", description: "Could not extract details from voice." });
@@ -197,7 +193,15 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
   };
 
   function onSubmit(data: GuestFormValues) {
-    onAddGuest(data as Guest); // Type assertion, ensure GuestFormValues matches Guest
+    // Ensure otherMeals is an array, even if undefined from the form
+    const guestData: Guest = {
+      ...data,
+      mealPreferences: {
+        ...data.mealPreferences,
+        otherMeals: data.mealPreferences.otherMeals || [],
+      },
+    };
+    onAddGuest(guestData);
     toast({
       title: "Guest Added",
       description: `${data.familyName} family has been added to the list.`,
@@ -205,7 +209,6 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     form.reset();
   }
 
-  // Watch adult and children counts to provide a hint for meal counts
   const adultsCount = form.watch("adults");
   const childrenCount = form.watch("children");
   const totalPeople = (adultsCount || 0) + (childrenCount || 0);
@@ -313,7 +316,6 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                 {form.formState.errors.mealPreferences?.veg?.message}
               </FormMessage>
 
-
               <FormField
                 control={form.control}
                 name="mealPreferences.nonVeg"
@@ -345,37 +347,73 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
               <FormMessage className="text-right -mt-3">
                 {form.formState.errors.mealPreferences?.childMeal?.message}
               </FormMessage>
-
-              <div className="space-y-2">
-                <FormLabel className="flex items-center gap-2"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal</FormLabel>
-                <div className="grid grid-cols-3 gap-2 items-start">
-                  <FormField
-                    control={form.control}
-                    name="mealPreferences.otherName"
-                    render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormControl>
-                          <Input placeholder="Meal Name" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="mealPreferences.otherCount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input type="number" placeholder="0" {...field} min="0" className="text-center" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                 <FormMessage>
-                  {form.formState.errors.mealPreferences?.otherName?.message || form.formState.errors.mealPreferences?.otherCount?.message}
-                </FormMessage>
+              
+              <div className="space-y-3">
+                <FormLabel className="flex items-center gap-2"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal(s)</FormLabel>
+                {fields.map((item, index) => (
+                  <div key={item.id} className="space-y-2 p-3 border rounded-md bg-background/50 shadow-inner">
+                    <div className="grid grid-cols-10 gap-2 items-start">
+                      <FormField
+                        control={form.control}
+                        name={`mealPreferences.otherMeals.${index}.name`}
+                        render={({ field }) => (
+                          <FormItem className="col-span-6">
+                            <FormLabel className="sr-only">Other Meal Name {index + 1}</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Meal Name" {...field} />
+                            </FormControl>
+                             <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`mealPreferences.otherMeals.${index}.count`}
+                        render={({ field }) => (
+                          <FormItem className="col-span-3">
+                             <FormLabel className="sr-only">Other Meal Count {index + 1}</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="0" {...field} min="1" className="text-center" />
+                            </FormControl>
+                             <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => remove(index)}
+                        className="col-span-1 text-destructive hover:text-destructive/80 mt-0"
+                        aria-label={`Remove other meal ${index + 1}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                   
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => append({ name: "", count: 1 })}
+                  className="w-full"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add Other Meal Type
+                </Button>
+                 {form.formState.errors.mealPreferences?.otherMeals?.root?.message && (
+                    <FormMessage>{form.formState.errors.mealPreferences.otherMeals.root.message}</FormMessage>
+                 )}
+                  {Array.isArray(form.formState.errors.mealPreferences?.otherMeals) &&
+                    form.formState.errors.mealPreferences.otherMeals.map((error, index) => (
+                      <div key={index}>
+                        {error?.name && <FormMessage>{`Other Meal ${index + 1} Name: ${error.name.message}`}</FormMessage>}
+                        {error?.count && <FormMessage>{`Other Meal ${index + 1} Count: ${error.count.message}`}</FormMessage>}
+                      </div>
+                  ))}
               </div>
+              
                <FormMessage>
                 { (form.formState.errors.mealPreferences as any)?.veg?.message && (form.formState.errors.mealPreferences as any)?.veg.type === 'custom' ? (form.formState.errors.mealPreferences as any)?.veg.message : null}
                </FormMessage>

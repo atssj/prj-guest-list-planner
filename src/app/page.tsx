@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { GuestForm } from "@/components/GuestForm";
 import { GuestSummary } from "@/components/GuestSummary";
-import type { Guest, GuestSummaryData } from "@/lib/types";
+import type { Guest, GuestSummaryData, OtherMealPreference } from "@/lib/types";
 import { INITIAL_SUMMARY } from "@/lib/types";
 import { AuthDialog } from "@/components/AuthDialog"; // Import AuthDialog
 import { useToast } from "@/hooks/use-toast"; // Import useToast
@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast"; // Import useToast
 // import { onAuthStateChanged, type User } from "firebase/auth";
 // import { doc, setDoc, getDoc } from "firebase/firestore";
 
-const GUEST_LIST_STORAGE_KEY = "guestListData_v2";
+const GUEST_LIST_STORAGE_KEY = "guestListData_v3"; // Incremented version due to data structure change
 
 export default function GuestListPlannerPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
@@ -72,12 +72,15 @@ export default function GuestListPlannerPage() {
     if (storedGuests) {
       try {
         const parsedGuests = JSON.parse(storedGuests) as Guest[];
-        if (Array.isArray(parsedGuests) && parsedGuests.every(g => typeof g.mealPreferences === 'object')) {
+        // Basic validation for the new structure
+        if (Array.isArray(parsedGuests) && parsedGuests.every(g => typeof g.mealPreferences === 'object' && Array.isArray(g.mealPreferences.otherMeals))) {
           setGuests(parsedGuests);
         } else {
+          console.warn("Local storage data has old format, clearing.");
           localStorage.removeItem(GUEST_LIST_STORAGE_KEY);
         }
       } catch (error) {
+        console.error("Error parsing guests from local storage:", error);
         localStorage.removeItem(GUEST_LIST_STORAGE_KEY);
       }
     }
@@ -104,7 +107,11 @@ export default function GuestListPlannerPage() {
         newMealCounts.veg += guest.mealPreferences.veg || 0;
         newMealCounts.nonVeg += guest.mealPreferences.nonVeg || 0;
         newMealCounts.childMeal += guest.mealPreferences.childMeal || 0;
-        newMealCounts.other += guest.mealPreferences.otherCount || 0;
+        if (guest.mealPreferences.otherMeals) {
+          guest.mealPreferences.otherMeals.forEach((otherMeal: OtherMealPreference) => {
+            newMealCounts.other += otherMeal.count || 0;
+          });
+        }
       }
     });
 

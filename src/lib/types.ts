@@ -1,10 +1,14 @@
 
+export interface OtherMealPreference {
+  name: string;
+  count: number;
+}
+
 export interface MealPreferences {
   veg: number;
   nonVeg: number;
   childMeal: number;
-  otherName?: string;
-  otherCount?: number;
+  otherMeals: OtherMealPreference[]; // Changed from otherName/otherCount
 }
 
 export interface Guest {
@@ -22,7 +26,7 @@ export interface GuestSummaryData {
     veg: number;
     nonVeg: number;
     childMeal: number;
-    other: number;
+    other: number; // This will sum counts from all otherMeals
   };
 }
 
@@ -37,7 +41,3 @@ export const INITIAL_SUMMARY: GuestSummaryData = {
     other: 0,
   },
 };
-
-// FOOD_PREFERENCES and FoodPreference type are no longer needed.
-// export const FOOD_PREFERENCES = ["vegetarian", "nonVegetarian", "jain", "vegan"] as const;
-// export type FoodPreference = (typeof FOOD_PREFERENCES)[number];
