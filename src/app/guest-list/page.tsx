@@ -17,15 +17,14 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Guest, OtherMealPreference } from "@/lib/types";
-import { AuthDialog } from "@/components/AuthDialog"; // Import AuthDialog
+import { AuthDialog } from "@/components/AuthDialog";
 
-// Ensure this key is consistent with the one used in src/app/page.tsx
 const GUEST_LIST_STORAGE_KEY = "guestListData_v3";
 
 export default function GuestListPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false); // State for AuthDialog
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
 
   useEffect(() => {
     const storedGuests = localStorage.getItem(GUEST_LIST_STORAGE_KEY);
@@ -48,8 +47,6 @@ export default function GuestListPage() {
   };
 
   const handleSaveListClick = () => {
-    // For now, this just opens the AuthDialog.
-    // Actual saving logic would depend on Firebase auth state.
     setIsAuthDialogOpen(true);
   };
 
@@ -65,7 +62,7 @@ export default function GuestListPage() {
     <div className="container mx-auto px-4 py-6 md:py-8 flex flex-col flex-grow">
       <header className="mb-6 md:mb-8">
         <div className="flex items-center justify-between">
-          <Link href="/" passHref>
+          <Link href="/add-guest" passHref>
             <Button variant="outline" size="icon" aria-label="Back to planner">
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -73,7 +70,19 @@ export default function GuestListPage() {
           <h1 className="text-2xl sm:text-3xl font-headline text-primary text-center flex-grow px-4">
             Guest List Preview
           </h1>
-           <div className="w-10 h-10"></div> {/* Placeholder for spacing */}
+          {guests.length > 0 && (
+            <Button 
+              variant="default" 
+              onClick={handleSaveListClick}
+              aria-label="Save guest list"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              Save List
+            </Button>
+          )}
+          {guests.length === 0 && (
+             <div className="w-10 h-10 md:w-auto"></div> // Placeholder to maintain layout balance when save button isn't shown
+          )}
         </div>
       </header>
 
@@ -87,17 +96,18 @@ export default function GuestListPage() {
               <p className="text-muted-foreground mb-4">
                 Your guest list is currently empty. Go back to the planner to add some guests!
               </p>
-              <div className="flex justify-center items-center gap-2 mt-4">
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-2 mt-4">
                 <Button
                   variant="outline"
                   onClick={handleSaveListClick}
-                  disabled // Always disabled here as guests.length will be 0
+                  disabled
+                  className="w-full sm:w-auto"
                 >
                   <Save className="mr-2 h-4 w-4" />
                   Save List
                 </Button>
-                <Link href="/" passHref>
-                  <Button variant="default"> {/* Ensure primary (orange) styling */}
+                <Link href="/add-guest" passHref>
+                  <Button variant="default" className="w-full sm:w-auto">
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back to Planner
                   </Button>
                 </Link>
@@ -146,15 +156,14 @@ export default function GuestListPage() {
       </main>
        <footer className="text-center py-6 mt-auto">
         <p className="text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Guest List Planner. Preview Page.
+          &copy; {new Date().getFullYear()} Shaadi Planner. Guest List Page.
         </p>
       </footer>
       <AuthDialog
         isOpen={isAuthDialogOpen}
         onClose={() => setIsAuthDialogOpen(false)}
         onLinkSent={(email) => {
-          // Handle post-link sent logic if needed, e.g., close dialog.
-          // The dialog itself shows a toast.
+          // Handle post-link sent logic if needed
         }}
       />
     </div>

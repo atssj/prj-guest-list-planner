@@ -17,7 +17,7 @@ export function BottomNavbar() {
     setMounted(true);
   }, []);
 
-  const isAddPageActive = mounted ? pathname === '/' : false;
+  const isAddPageActive = mounted ? pathname === '/add-guest' : false;
   const isSummaryPageActive = mounted ? pathname === '/summary' : false;
   const isGuestListPageActive = mounted ? pathname === '/guest-list' : false;
   const isProfilePageActive = mounted ? pathname === '/profile' : false;
@@ -32,8 +32,8 @@ export function BottomNavbar() {
   };
 
   const handleNavAndScrollToForm = () => {
-    if (pathname !== '/') { 
-      router.push(`/#guest-form-section`);
+    if (pathname !== '/add-guest') { 
+      router.push(`/add-guest#guest-form-section`);
     } else {
       scrollToElement('guest-form-section');
     }

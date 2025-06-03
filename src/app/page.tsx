@@ -1,91 +1,52 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from 'next/navigation';
-import { AppHeader } from "@/components/AppHeader";
-import { GuestForm } from "@/components/GuestForm";
-// GuestSummary and related types/state are removed from this page
-import type { Guest } from "@/lib/types";
-// INITIAL_SUMMARY is removed
-// AuthDialog is removed as saving is handled on other pages now
-// useToast is removed if not used by other components on this page (GuestForm uses it internally)
-import { scrollToElement } from "@/lib/utils";
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Sparkles } from 'lucide-react';
+import type { Metadata } from 'next'; // For potential page-specific metadata if needed later
 
-const GUEST_LIST_STORAGE_KEY = "guestListData_v3"; 
+// While metadata is usually in layout.tsx or page.tsx server components,
+// we can define it here if this page were to be a server component.
+// For client components, it's primarily handled by RootLayout.
+// export const metadata: Metadata = {
+//   title: 'Shaadi Planner - Effortless Wedding Guest List Management',
+//   description: 'Plan your perfect Indian wedding guest list with Shaadi Planner. Easily add guests, manage preferences, and get a clear summary. Start planning today!',
+// };
 
-export default function AddGuestPage() {
-  const [guests, setGuests] = useState<Guest[]>([]);
-  // summary state and its calculation useEffect are removed
-  // isAuthDialogOpen state is removed
-  const router = useRouter();
-
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash) {
-      const elementId = hash.substring(1); 
-      if (elementId === 'guest-form-section') {
-        scrollToElement(elementId);
-      }
-    }
-  }, [router]); 
-
-
-  const loadGuestsFromLocalStorage = () => {
-    const storedGuests = localStorage.getItem(GUEST_LIST_STORAGE_KEY);
-    if (storedGuests) {
-      try {
-        const parsedGuests = JSON.parse(storedGuests) as Guest[];
-        if (Array.isArray(parsedGuests) && parsedGuests.every(g => typeof g.mealPreferences === 'object' && Array.isArray(g.mealPreferences.otherMeals))) {
-          setGuests(parsedGuests);
-        } else {
-          console.warn("Local storage data has old format, clearing.");
-          localStorage.removeItem(GUEST_LIST_STORAGE_KEY);
-        }
-      } catch (error) {
-        console.error("Error parsing guests from local storage:", error);
-        localStorage.removeItem(GUEST_LIST_STORAGE_KEY);
-      }
-    }
-  };
-
-  useEffect(() => {
-    loadGuestsFromLocalStorage();
-  }, []);
-
-
-  // useEffect for summary calculation is removed
-
-  useEffect(() => {
-    localStorage.setItem(GUEST_LIST_STORAGE_KEY, JSON.stringify(guests));
-  }, [guests]);
-
-
-  const handleAddGuest = (newGuest: Guest) => {
-    setGuests((prevGuests) => [...prevGuests, newGuest]);
-  };
-
-  // handleSaveListClick is removed as AppHeader doesn't have save, and no save button on this page
-  
-  const handleViewListClick = () => {
-    router.push('/guest-list');
-  };
-
+export default function HomePage() {
   return (
-    <div className="container mx-auto px-4 py-2 md:px-6 md:py-4 flex flex-col flex-grow">
-      <AppHeader onViewListClick={handleViewListClick} />
-      <main className="mt-6 md:mt-8 flex-grow flex justify-center items-start"> {/* Simplified layout */}
-        <div id="guest-form-section" className="w-full lg:max-w-lg scroll-mt-20"> {/* Centered form */}
-          <GuestForm onAddGuest={handleAddGuest} />
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem-1px)] text-center px-4 py-8 md:py-16 bg-gradient-to-br from-background to-secondary/30 animate-in fade-in-50 duration-1000">
+      <main className="flex flex-col items-center space-y-8 max-w-2xl">
+        <div className="p-4 bg-primary/10 rounded-full inline-block">
+          <Sparkles className="h-12 w-12 text-primary" />
         </div>
-        {/* GuestSummary section is removed */}
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-headline text-primary">
+          Shaadi Planner
+        </h1>
+        <p className="text-lg sm:text-xl text-foreground/80 leading-relaxed">
+          Your Partner in Perfect Wedding Guest Management.
+          <br />
+          Seamlessly organize your wedding invitations for your special day.
+        </p>
+        <p className="text-md text-muted-foreground">
+          Add family names, specify guest counts, select food preferences, and watch your guest list grow.
+          Designed with the warmth and vibrancy of Indian weddings in mind.
+        </p>
+        <div className="mt-8">
+          <Link href="/add-guest" passHref>
+            <Button size="lg" className="text-lg py-6 px-8 bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg transform hover:scale-105 transition-transform duration-200">
+              Start Your Guest List
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+        </div>
       </main>
-      <footer className="text-center py-6 mt-auto">
+      <footer className="absolute bottom-6 text-center w-full">
         <p className="text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Guest List Planner. Add Guests.
+          &copy; {new Date().getFullYear()} Shaadi Planner. All rights reserved.
         </p>
       </footer>
-      {/* AuthDialog is removed from this page */}
     </div>
   );
 }

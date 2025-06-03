@@ -5,8 +5,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { BottomNavbar } from '@/components/BottomNavbar';
 
 export const metadata: Metadata = {
-  title: 'Guest List Planner',
-  description: 'Effortlessly manage your guest lists for any occasion.',
+  title: 'Shaadi Planner - Wedding Guest List Management',
+  description: 'Effortlessly manage your wedding guest lists with Shaadi Planner. Add guests, track preferences, and get summaries for your Indian wedding or any event.',
+  keywords: 'shaadi planner, wedding guest list, indian wedding, guest management, event planning, rsvp tracking',
 };
 
 export default function RootLayout({

@@ -19,7 +19,7 @@ export default function SummaryPage() {
   const [summary, setSummary] = useState<GuestSummaryData>(INITIAL_SUMMARY);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
-  const { toast } = useToast(); // if needed for save notifications
+  const { toast } = useToast(); 
 
   useEffect(() => {
     const storedGuests = localStorage.getItem(GUEST_LIST_STORAGE_KEY);
@@ -31,8 +31,6 @@ export default function SummaryPage() {
         }
       } catch (error) {
         console.error("Error parsing guests from local storage:", error);
-        // Optionally clear localStorage if data is corrupt
-        // localStorage.removeItem(GUEST_LIST_STORAGE_KEY);
       }
     }
     setIsLoading(false);
@@ -68,10 +66,7 @@ export default function SummaryPage() {
   }, [guests]);
 
   const handleSaveListClick = () => {
-    // Logic to open AuthDialog, actual saving would be handled after authentication
     setIsAuthDialogOpen(true);
-    // Placeholder toast, actual save would be async
-    // toast({ title: "Save Action", description: "Authentication required to save." });
   };
 
   if (isLoading) {
@@ -86,7 +81,7 @@ export default function SummaryPage() {
     <div className="container mx-auto px-4 py-6 md:py-8 flex flex-col flex-grow">
       <header className="mb-6 md:mb-8">
         <div className="flex items-center">
-          <Link href="/" passHref>
+          <Link href="/add-guest" passHref>
             <Button variant="outline" size="icon" aria-label="Back to planner">
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -94,11 +89,11 @@ export default function SummaryPage() {
           <h1 className="text-2xl sm:text-3xl font-headline text-primary text-center flex-grow px-4">
             Guest Summary
           </h1>
-           <div className="w-10 h-10"></div> {/* Placeholder for spacing */}
+           <div className="w-10 h-10"></div> 
         </div>
       </header>
 
-      <main className="flex-grow flex flex-col justify-center items-center"> {/* Changed to flex-col for button placement */}
+      <main className="flex-grow flex flex-col justify-center items-center">
          <div className="w-full lg:max-w-2xl">
             <GuestSummary 
               summary={summary} 
@@ -107,7 +102,7 @@ export default function SummaryPage() {
             />
          </div>
          <div className="mt-8 flex justify-center">
-            <Link href="/" passHref>
+            <Link href="/add-guest" passHref>
                 <Button variant="default">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to Planner
@@ -117,7 +112,7 @@ export default function SummaryPage() {
       </main>
        <footer className="text-center py-6 mt-auto">
         <p className="text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Guest List Planner. Summary Page.
+          &copy; {new Date().getFullYear()} Shaadi Planner. Summary Page.
         </p>
       </footer>
       <AuthDialog
@@ -130,4 +125,3 @@ export default function SummaryPage() {
     </div>
   );
 }
-
