@@ -2,7 +2,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,11 +15,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Guest, MealPreferences, OtherMealPreference } from "@/lib/types";
-import { PlusCircle, Users, Utensils, Salad, Beef, Grape, Wheat, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import type { Guest } from "@/lib/types";
+import { PlusCircle, Users, Utensils, Salad, Beef, Grape, Wheat, Trash2, ArrowLeft, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import React from "react";
+import React, { useState } from "react";
 
 const otherMealPreferenceSchema = z.object({
   name: z.string().min(1, "Meal name is required."),
@@ -41,11 +41,12 @@ const guestFormSchema = z.object({
 })
 .refine((data) => data.adults + data.children > 0, {
   message: "At least one guest (adult or child) is required.",
-  path: ["adults"],
+  path: ["adults"], // This error will show under adults field or a general form error area
 })
 .refine(
   (data) => {
     const totalPeople = data.adults + data.children;
+    if (totalPeople === 0) return true; // Skip this check if no guests, covered by above refine
     const otherMealsCount = data.mealPreferences.otherMeals?.reduce((sum, meal) => sum + (meal.count || 0), 0) || 0;
     const totalMeals =
       (data.mealPreferences.veg || 0) +
@@ -55,8 +56,8 @@ const guestFormSchema = z.object({
     return totalMeals === totalPeople;
   },
   {
-    message: "Total number of meals must equal the total number of adults and children.",
-    path: ["mealPreferences.veg"], 
+    message: "Total number of meals must equal the total number of guests.",
+    path: ["mealPreferences.veg"], // Error will appear under the first meal preference field or a general area
   }
 );
 
@@ -68,6 +69,8 @@ interface GuestFormProps {
 
 export function GuestForm({ onAddGuest }: GuestFormProps) {
   const { toast } = useToast();
+  const [currentStep, setCurrentStep] = useState(1);
+
   const form = useForm<GuestFormValues>({
     resolver: zodResolver(guestFormSchema),
     defaultValues: {
@@ -81,6 +84,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
         otherMeals: [],
       },
     },
+    mode: "onChange", // Needed for more responsive error messages during step changes
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -102,202 +106,264 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
       description: `${data.familyName} family has been added to the list.`,
     });
     form.reset();
+    setCurrentStep(1); // Reset to the first step
   }
 
   const adultsCount = form.watch("adults");
   const childrenCount = form.watch("children");
   const totalPeople = (adultsCount || 0) + (childrenCount || 0);
 
+  const handleNextStep = async () => {
+    // Trigger validation for step 1 fields
+    const isValidStep1 = await form.trigger(["familyName", "adults", "children"]);
+    
+    if (isValidStep1) {
+       // Manually check the refine condition for adults + children > 0 as trigger might not catch it directly
+       const adults = form.getValues("adults");
+       const children = form.getValues("children");
+       if (adults + children === 0) {
+         form.setError("adults", { type: "manual", message: "At least one guest (adult or child) is required." });
+         return;
+       }
+      setCurrentStep(2);
+    }
+  };
+
+  const handlePrevStep = () => {
+    setCurrentStep(1);
+  };
+
+  const StepIndicator = () => (
+    <div className="mb-4 text-center">
+      <p className="text-sm text-muted-foreground">
+        Step {currentStep} of 2: {currentStep === 1 ? "Guest Details" : "Meal Preferences"}
+      </p>
+      <div className="w-full bg-muted rounded-full h-1.5 mt-1">
+        <div
+          className="bg-primary h-1.5 rounded-full transition-all duration-300 ease-in-out"
+          style={{ width: `${currentStep * 50}%` }}
+        ></div>
+      </div>
+    </div>
+  );
+
   return (
     <Card className="shadow-lg w-full max-w-md mx-auto">
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle className="font-headline text-2xl flex items-center gap-2">
-            <Users className="h-6 w-6 text-primary" />
-            Add Guest
-          </CardTitle>
-        </div>
+        <CardTitle className="font-headline text-2xl flex items-center gap-2">
+          {currentStep === 1 ? <Users className="h-6 w-6 text-primary" /> : <Utensils className="h-6 w-6 text-primary" />}
+          {currentStep === 1 ? "Add Guest" : "Meal Preferences"}
+        </CardTitle>
       </CardHeader>
       <CardContent>
+        <StepIndicator />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="familyName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Family Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Sharma Family" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="adults"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Adults</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="0" {...field} min="0" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+            {currentStep === 1 && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="familyName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Family Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Sharma Family" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="adults"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Adults</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="0" {...field} min="0" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="children"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Children</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="0" {...field} min="0" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                 {/* Display the "At least one guest" error here if it's triggered for adults path */}
+                {form.formState.errors.adults && form.formState.errors.adults.type === 'manual' && (
+                    <FormMessage>{form.formState.errors.adults.message}</FormMessage>
                 )}
-              />
-              <FormField
-                control={form.control}
-                name="children"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Children</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="0" {...field} min="0" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                {form.formState.errors.adults && form.formState.errors.adults.type !== 'manual' && !form.formState.errors.children && (
+                    <FormMessage>{form.formState.errors.adults.message}</FormMessage>
                 )}
-              />
-            </div>
-            
-            <div className="space-y-3 border p-3 rounded-md shadow-sm bg-card">
-              <div className="flex items-center gap-2 mb-2">
-                <Utensils className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-medium">Meal Preferences</h3>
-              </div>
-              <FormDescription>
-                Total meals should sum up to {totalPeople} (total adults + children).
-              </FormDescription>
+              </>
+            )}
 
-              <FormField
-                control={form.control}
-                name="mealPreferences.veg"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
-                    <FormLabel className="flex items-center gap-2"><Salad className="h-4 w-4 text-green-600"/>Vegetarian</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-               <FormMessage className="text-right -mt-3">
-                {form.formState.errors.mealPreferences?.veg?.message}
-              </FormMessage>
+            {currentStep === 2 && (
+              <>
+                <div className="space-y-3 border p-3 rounded-md shadow-sm bg-card">
+                  <FormDescription>
+                    Total meals for <span className="font-semibold">{form.getValues("familyName") || "this family"}</span> should sum up to {totalPeople} (total adults + children).
+                  </FormDescription>
 
-              <FormField
-                control={form.control}
-                name="mealPreferences.nonVeg"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
-                    <FormLabel className="flex items-center gap-2"><Beef className="h-4 w-4 text-red-600"/>Non-Vegetarian</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormMessage className="text-right -mt-3">
-                {form.formState.errors.mealPreferences?.nonVeg?.message}
-              </FormMessage>
+                  <FormField
+                    control={form.control}
+                    name="mealPreferences.veg"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between">
+                        <FormLabel className="flex items-center gap-2"><Salad className="h-4 w-4 text-green-600"/>Vegetarian</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormMessage className="text-right -mt-3">
+                    {form.formState.errors.mealPreferences?.veg?.message}
+                  </FormMessage>
 
-              <FormField
-                control={form.control}
-                name="mealPreferences.childMeal"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
-                    <FormLabel className="flex items-center gap-2"><Grape className="h-4 w-4 text-purple-600"/>Child Meal</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormMessage className="text-right -mt-3">
-                {form.formState.errors.mealPreferences?.childMeal?.message}
-              </FormMessage>
-              
-              <div className="space-y-2">
-                <FormLabel className="flex items-center gap-2"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal(s)</FormLabel>
-                {fields.map((item, index) => (
-                  <div key={item.id} className="p-2 border rounded-md bg-background/50 shadow-inner">
-                    <div className="grid grid-cols-10 gap-2 items-center">
-                      <FormField
-                        control={form.control}
-                        name={`mealPreferences.otherMeals.${index}.name`}
-                        render={({ field }) => (
-                          <FormItem className="col-span-7"> 
-                            <FormLabel className="sr-only">Other Meal Name {index + 1}</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Meal Name" {...field} />
-                            </FormControl>
-                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`mealPreferences.otherMeals.${index}.count`}
-                        render={({ field }) => (
-                          <FormItem className="col-span-2"> 
-                             <FormLabel className="sr-only">Other Meal Count {index + 1}</FormLabel>
-                            <FormControl>
-                              <Input type="number" placeholder="0" {...field} min="1" className="text-center" />
-                            </FormControl>
-                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        type="button"
-                        variant="link"
-                        size="icon"
-                        onClick={() => remove(index)}
-                        className="col-span-1 text-destructive mt-1"
-                        aria-label={`Remove other meal ${index + 1}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                   
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => append({ name: "", count: 1 })}
-                  className="w-full"
-                >
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add Other Meal
-                </Button>
-                 {form.formState.errors.mealPreferences?.otherMeals?.root?.message && (
-                    <FormMessage>{form.formState.errors.mealPreferences.otherMeals.root.message}</FormMessage>
-                 )}
-                  {Array.isArray(form.formState.errors.mealPreferences?.otherMeals) &&
-                    form.formState.errors.mealPreferences.otherMeals.map((error, index) => (
-                      <div key={index}>
-                        {error?.name && <FormMessage>{`Other Meal ${index + 1} Name: ${error.name.message}`}</FormMessage>}
-                        {error?.count && <FormMessage>{`Other Meal ${index + 1} Count: ${error.count.message}`}</FormMessage>}
+                  <FormField
+                    control={form.control}
+                    name="mealPreferences.nonVeg"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between">
+                        <FormLabel className="flex items-center gap-2"><Beef className="h-4 w-4 text-red-600"/>Non-Vegetarian</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormMessage className="text-right -mt-3">
+                    {form.formState.errors.mealPreferences?.nonVeg?.message}
+                  </FormMessage>
+
+                  <FormField
+                    control={form.control}
+                    name="mealPreferences.childMeal"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between">
+                        <FormLabel className="flex items-center gap-2"><Grape className="h-4 w-4 text-purple-600"/>Child Meal</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormMessage className="text-right -mt-3">
+                    {form.formState.errors.mealPreferences?.childMeal?.message}
+                  </FormMessage>
+                  
+                  <div className="space-y-2">
+                    <FormLabel className="flex items-center gap-2"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal(s)</FormLabel>
+                    {fields.map((item, index) => (
+                      <div key={item.id} className="p-2 border rounded-md bg-background/50 shadow-inner">
+                        <div className="grid grid-cols-10 gap-2 items-start"> {/* Changed items-center to items-start */}
+                          <FormField
+                            control={form.control}
+                            name={`mealPreferences.otherMeals.${index}.name`}
+                            render={({ field }) => (
+                              <FormItem className="col-span-7"> 
+                                <FormLabel className="sr-only">Other Meal Name {index + 1}</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Meal Name" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`mealPreferences.otherMeals.${index}.count`}
+                            render={({ field }) => (
+                              <FormItem className="col-span-2"> 
+                                <FormLabel className="sr-only">Other Meal Count {index + 1}</FormLabel>
+                                <FormControl>
+                                  <Input type="number" placeholder="0" {...field} min="1" className="text-center" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button
+                            type="button"
+                            variant="link"
+                            size="icon"
+                            onClick={() => remove(index)}
+                            className="col-span-1 text-destructive mt-1"
+                            aria-label={`Remove other meal ${index + 1}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                  ))}
-              </div>
-              
-               <FormMessage>
-                { (form.formState.errors.mealPreferences as any)?.veg?.message && (form.formState.errors.mealPreferences as any)?.veg.type === 'custom' ? (form.formState.errors.mealPreferences as any)?.veg.message : null}
-               </FormMessage>
-            </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => append({ name: "", count: 1 })}
+                      className="w-full"
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add Other Meal
+                    </Button>
+                    {form.formState.errors.mealPreferences?.otherMeals?.root?.message && (
+                        <FormMessage>{form.formState.errors.mealPreferences.otherMeals.root.message}</FormMessage>
+                    )}
+                    {Array.isArray(form.formState.errors.mealPreferences?.otherMeals) &&
+                        form.formState.errors.mealPreferences.otherMeals.map((error, index) => (
+                        <div key={index}>
+                            {error?.name && <FormMessage>{`Other Meal ${index + 1} Name: ${error.name.message}`}</FormMessage>}
+                            {error?.count && <FormMessage>{`Other Meal ${index + 1} Count: ${error.count.message}`}</FormMessage>}
+                        </div>
+                    ))}
+                  </div>
+                   {/* Display the "Total number of meals must equal..." error here if it's on mealPreferences.veg */}
+                   {form.formState.errors.mealPreferences?.veg?.type === 'custom' && (
+                    <FormMessage>{form.formState.errors.mealPreferences.veg.message}</FormMessage>
+                   )}
+                </div>
+              </>
+            )}
 
-            <Button type="submit" className="w-full text-lg py-4 bg-accent hover:bg-accent/90 text-accent-foreground">
-              <PlusCircle className="mr-2 h-5 w-5" />
-              Add Guest
-            </Button>
+            <div className="flex gap-2 justify-end pt-2">
+              {currentStep === 2 && (
+                <Button type="button" variant="outline" onClick={handlePrevStep}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Previous
+                </Button>
+              )}
+              {currentStep === 1 && (
+                <Button type="button" onClick={handleNextStep} className="bg-primary hover:bg-primary/90">
+                  Next
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+              {currentStep === 2 && (
+                <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                  <PlusCircle className="mr-2 h-5 w-5" />
+                  Add Guest
+                </Button>
+              )}
+            </div>
           </form>
         </Form>
       </CardContent>
     </Card>
   );
 }
+
+    
