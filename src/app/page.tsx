@@ -10,6 +10,7 @@ import type { Guest, GuestSummaryData, OtherMealPreference } from "@/lib/types";
 import { INITIAL_SUMMARY } from "@/lib/types";
 import { AuthDialog } from "@/components/AuthDialog"; 
 import { useToast } from "@/hooks/use-toast"; 
+import { scrollToElement } from "@/lib/utils";
 
 
 // import { auth, db } from "@/lib/firebase"; // For future Firebase integration
@@ -68,6 +69,20 @@ export default function GuestListPlannerPage() {
   //     }
   //   }
   // }, []);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      const elementId = hash.substring(1); // Remove #
+      if (elementId === 'guest-form-section' || elementId === 'guest-summary-section') {
+        scrollToElement(elementId);
+        // Optional: Clean the hash to prevent re-scrolling on refresh if the hash remains
+        // and to make sure subsequent clicks on the same nav item from another page still trigger scroll.
+        // However, Next.js router might handle this, or it might interfere. Test thoroughly.
+        // router.replace(pathname, { scroll: false }); // or window.history.replaceState
+      }
+    }
+  }, [router]); // Rerun if router object changes, though hash is usually handled on initial load.
 
 
   const loadGuestsFromLocalStorage = () => {
