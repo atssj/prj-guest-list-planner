@@ -1,7 +1,7 @@
 
 "use client";
 
-import { PlusCircle, ListChecks } from 'lucide-react';
+import { PlusCircle, ListChecks, Mic } from 'lucide-react';
 
 // Function to scroll to an element
 const scrollToElement = (elementId: string) => {
@@ -27,6 +27,16 @@ export function BottomNavbar() {
             >
               <PlusCircle className="h-6 w-6" />
               <span className="text-xs mt-1">Add</span>
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={() => scrollToElement('guest-form-section')}
+              className="flex flex-col items-center justify-center p-2 text-primary hover:text-primary/80 focus:outline-none focus:text-primary/80 rounded-md"
+              aria-label="Use Voice Input"
+            >
+              <Mic className="h-6 w-6" />
+              <span className="text-xs mt-1">Voice</span>
             </button>
           </li>
           <li>
