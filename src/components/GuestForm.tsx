@@ -301,4 +301,3 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     </Card>
   );
 }
-
