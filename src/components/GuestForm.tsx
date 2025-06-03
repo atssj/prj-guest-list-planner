@@ -229,7 +229,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                         control={form.control}
                         name={`mealPreferences.otherMeals.${index}.name`}
                         render={({ field }) => (
-                          <FormItem className="col-span-7"> {/* Changed from col-span-6 */}
+                          <FormItem className="col-span-7"> 
                             <FormLabel className="sr-only">Other Meal Name {index + 1}</FormLabel>
                             <FormControl>
                               <Input placeholder="Meal Name" {...field} />
@@ -242,7 +242,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                         control={form.control}
                         name={`mealPreferences.otherMeals.${index}.count`}
                         render={({ field }) => (
-                          <FormItem className="col-span-2"> {/* Changed from col-span-3 */}
+                          <FormItem className="col-span-2"> 
                              <FormLabel className="sr-only">Other Meal Count {index + 1}</FormLabel>
                             <FormControl>
                               <Input type="number" placeholder="0" {...field} min="1" className="text-center" />
@@ -253,7 +253,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                       />
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="link"
                         size="icon"
                         onClick={() => remove(index)}
                         className="col-span-1 text-destructive mt-0"
