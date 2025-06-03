@@ -20,6 +20,7 @@ import {
   TableCaption,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator"; // Added import
 
 const GUEST_LIST_STORAGE_KEY = "guestListData_v3";
 
