@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,10 +8,33 @@ import { GuestSummary } from "@/components/GuestSummary";
 import type { Guest, GuestSummaryData, FoodPreference } from "@/lib/types";
 import { INITIAL_SUMMARY } from "@/lib/types";
 
+const GUEST_LIST_STORAGE_KEY = "guestListData_v1";
+
 export default function GuestListPlannerPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [summary, setSummary] = useState<GuestSummaryData>(INITIAL_SUMMARY);
 
+  // Load guests from localStorage on initial client-side render
+  useEffect(() => {
+    const storedGuests = localStorage.getItem(GUEST_LIST_STORAGE_KEY);
+    if (storedGuests) {
+      try {
+        const parsedGuests = JSON.parse(storedGuests) as Guest[];
+        // Basic validation: check if it's an array
+        if (Array.isArray(parsedGuests)) {
+          // You could add more detailed validation here if needed,
+          // e.g., checking if objects have the required Guest properties.
+          setGuests(parsedGuests);
+        } else {
+          localStorage.removeItem(GUEST_LIST_STORAGE_KEY); // Clear invalid data
+        }
+      } catch (error) {
+        localStorage.removeItem(GUEST_LIST_STORAGE_KEY); // Clear corrupted data
+      }
+    }
+  }, []); // Empty dependency array: runs only once on mount (client-side)
+
+  // Update summary when guests change
   useEffect(() => {
     let totalAdults = 0;
     let totalChildren = 0;
@@ -24,7 +48,10 @@ export default function GuestListPlannerPage() {
     guests.forEach((guest) => {
       totalAdults += guest.adults;
       totalChildren += guest.children;
-      foodPreferencesCount[guest.foodPreference]++;
+      // Ensure foodPreference is a valid key before incrementing
+      if (guest.foodPreference && foodPreferencesCount.hasOwnProperty(guest.foodPreference)) {
+        foodPreferencesCount[guest.foodPreference]++;
+      }
     });
 
     setSummary({
@@ -34,6 +61,15 @@ export default function GuestListPlannerPage() {
       foodPreferences: foodPreferencesCount,
     });
   }, [guests]);
+
+  // Save guests to localStorage when guests change
+  useEffect(() => {
+    // This effect runs after the initial render and whenever 'guests' state changes.
+    // It ensures that if guests were loaded from localStorage, they are not immediately
+    // overwritten by an empty array if the load effect updates 'guests' state.
+    localStorage.setItem(GUEST_LIST_STORAGE_KEY, JSON.stringify(guests));
+  }, [guests]);
+
 
   const handleAddGuest = (newGuest: Guest) => {
     setGuests((prevGuests) => [...prevGuests, newGuest]);
