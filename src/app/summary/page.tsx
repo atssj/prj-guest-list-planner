@@ -87,7 +87,7 @@ export default function SummaryPage() {
       <header className="mb-6 md:mb-8">
         <div className="flex items-center">
           <Link href="/" passHref>
-            <Button variant="outline" size="icon" aria-label="Back to Add Guest">
+            <Button variant="outline" size="icon" aria-label="Back to planner">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
