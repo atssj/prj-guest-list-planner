@@ -1,7 +1,7 @@
 
 "use client";
 
-import { PlusCircle, ListChecks, Users } from 'lucide-react'; // Removed Mic
+import { PlusCircle, ListChecks, Users, UserCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -18,8 +18,9 @@ export function BottomNavbar() {
   }, []);
 
   const isAddPageActive = mounted ? pathname === '/' : false;
-  const isGuestListPageActive = mounted ? pathname === '/guest-list' : false;
   const isSummaryPageActive = mounted ? pathname === '/summary' : false;
+  const isGuestListPageActive = mounted ? pathname === '/guest-list' : false;
+  const isProfilePageActive = mounted ? pathname === '/profile' : false;
 
   const getItemClasses = (isActive: boolean) => {
     return cn(
@@ -35,6 +36,13 @@ export function BottomNavbar() {
       router.push(`/#guest-form-section`);
     } else {
       scrollToElement('guest-form-section');
+    }
+  };
+
+  const handleScrollToTopIfCurrentPage = (targetPath: string, event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (pathname === targetPath) {
+      event.preventDefault(); 
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -62,12 +70,7 @@ export function BottomNavbar() {
                 className={getItemClasses(isSummaryPageActive)}
                 aria-label="View Summary"
                 aria-current={mounted && isSummaryPageActive ? "page" : undefined}
-                onClick={(e) => {
-                  if (pathname === '/summary') {
-                    e.preventDefault(); // Prevent re-navigation if already on summary page
-                    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top
-                  }
-                }}
+                onClick={(e) => handleScrollToTopIfCurrentPage('/summary', e)}
               >
                 <ListChecks className="h-6 w-6" />
                 <span className="text-xs mt-1">Summary</span>
@@ -82,15 +85,25 @@ export function BottomNavbar() {
                 className={getItemClasses(isGuestListPageActive)}
                 aria-label="View Guest List"
                 aria-current={mounted && isGuestListPageActive ? "page" : undefined}
-                 onClick={(e) => {
-                  if (pathname === '/guest-list') {
-                    e.preventDefault(); 
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }
-                }}
+                onClick={(e) => handleScrollToTopIfCurrentPage('/guest-list', e)}
               >
                 <Users className="h-6 w-6" />
                 <span className="text-xs mt-1">List</span>
+              </a>
+            </Link>
+          </li>
+
+          {/* 4. Profile Button */}
+          <li className="flex-1 h-full">
+            <Link href="/profile" passHref legacyBehavior>
+              <a 
+                className={getItemClasses(isProfilePageActive)}
+                aria-label="View Profile"
+                aria-current={mounted && isProfilePageActive ? "page" : undefined}
+                onClick={(e) => handleScrollToTopIfCurrentPage('/profile', e)}
+              >
+                <UserCircle2 className="h-6 w-6" />
+                <span className="text-xs mt-1">Profile</span>
               </a>
             </Link>
           </li>
