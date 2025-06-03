@@ -19,14 +19,8 @@ export function AppHeader({ onSaveListClick }: AppHeaderProps) {
       <p className="text-sm sm:text-md md:text-lg text-muted-foreground">
         Effortlessly manage your guest lists for any occasion.
       </p>
-      {onSaveListClick && (
-         <div className="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8">
-          <Button variant="outline" onClick={onSaveListClick} className="shadow-md">
-            <Save className="mr-2 h-4 w-4" />
-            Save List
-          </Button>
-        </div>
-      )}
+      {/* Save List button removed from here */}
     </header>
   );
 }
+
