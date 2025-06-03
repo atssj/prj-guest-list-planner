@@ -98,14 +98,22 @@ export default function SummaryPage() {
         </div>
       </header>
 
-      <main className="flex-grow flex justify-center items-start">
-         <div className="w-full lg:max-w-2xl"> {/* Adjusted max-width for summary */}
+      <main className="flex-grow flex flex-col justify-center items-center"> {/* Changed to flex-col for button placement */}
+         <div className="w-full lg:max-w-2xl">
             <GuestSummary 
               summary={summary} 
               onSaveListClick={handleSaveListClick} 
               isSaveDisabled={guests.length === 0}
             />
          </div>
+         <div className="mt-8 flex justify-center">
+            <Link href="/" passHref>
+                <Button variant="default">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Planner
+                </Button>
+            </Link>
+        </div>
       </main>
        <footer className="text-center py-6 mt-auto">
         <p className="text-sm text-muted-foreground">
@@ -122,3 +130,4 @@ export default function SummaryPage() {
     </div>
   );
 }
+
