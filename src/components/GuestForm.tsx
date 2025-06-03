@@ -144,7 +144,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
   return (
     <Card className="shadow-lg w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle className="font-headline text-2xl flex items-center gap-2">
+        <CardTitle className="font-headline text-2xl flex items-center gap-1">
           {currentStep === 1 ? <Users className="h-6 w-6 text-primary" /> : <Utensils className="h-6 w-6 text-primary" />}
           {currentStep === 1 ? "Add Guest Details" : "Set Meal Preferences"}
         </CardTitle>
@@ -217,7 +217,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     name="mealPreferences.veg"
                     render={({ field }) => (
                       <FormItem className="flex items-center justify-between">
-                        <FormLabel className="flex items-center gap-2"><Salad className="h-4 w-4 text-green-600"/>Vegetarian</FormLabel>
+                        <FormLabel className="flex items-center gap-1"><Salad className="h-4 w-4 text-green-600"/>Vegetarian</FormLabel>
                         <FormControl>
                           <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
                         </FormControl>
@@ -233,7 +233,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     name="mealPreferences.nonVeg"
                     render={({ field }) => (
                       <FormItem className="flex items-center justify-between">
-                        <FormLabel className="flex items-center gap-2"><Beef className="h-4 w-4 text-red-600"/>Non-Vegetarian</FormLabel>
+                        <FormLabel className="flex items-center gap-1"><Beef className="h-4 w-4 text-red-600"/>Non-Vegetarian</FormLabel>
                         <FormControl>
                           <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
                         </FormControl>
@@ -249,7 +249,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     name="mealPreferences.childMeal"
                     render={({ field }) => (
                       <FormItem className="flex items-center justify-between">
-                        <FormLabel className="flex items-center gap-2"><Grape className="h-4 w-4 text-purple-600"/>Child Meal</FormLabel>
+                        <FormLabel className="flex items-center gap-1"><Grape className="h-4 w-4 text-purple-600"/>Child Meal</FormLabel>
                         <FormControl>
                           <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
                         </FormControl>
@@ -261,7 +261,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                   </FormMessage>
                   
                   <div className="space-y-2">
-                    <FormLabel className="flex items-center gap-2"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal(s)</FormLabel>
+                    <FormLabel className="flex items-center gap-1"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal(s)</FormLabel>
                     {fields.map((item, index) => (
                       <div key={item.id} className="p-2 border rounded-md bg-background/50 shadow-inner">
                         <div className="grid grid-cols-10 gap-2 items-start">
@@ -296,7 +296,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                             variant="link"
                             size="icon"
                             onClick={() => remove(index)}
-                            className="col-span-1 text-destructive mt-1"
+                            className="col-span-1 text-destructive mt-1 focus-visible:ring-destructive"
                             aria-label={`Remove other meal ${index + 1}`}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -311,7 +311,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                       onClick={() => append({ name: "", count: 1 })}
                       className="w-full"
                     >
-                      <PlusCircle className="mr-2 h-4 w-4" /> Add Other Meal
+                      <PlusCircle className="mr-1 h-4 w-4" /> Add Other Meal
                     </Button>
                     {form.formState.errors.mealPreferences?.otherMeals?.root?.message && (
                         <FormMessage>{form.formState.errors.mealPreferences.otherMeals.root.message}</FormMessage>
@@ -334,19 +334,19 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
             <div className="flex gap-2 justify-end pt-2">
               {currentStep === 2 && (
                 <Button type="button" variant="outline" onClick={handlePrevStep}>
-                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  <ArrowLeft className="mr-1 h-4 w-4" />
                   Previous
                 </Button>
               )}
               {currentStep === 1 && (
                 <Button type="button" onClick={handleNextStep} className="bg-primary hover:bg-primary/90">
                   Next
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               )}
               {currentStep === 2 && (
                 <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                  <PlusCircle className="mr-2 h-5 w-5" />
+                  <PlusCircle className="mr-1 h-5 w-5" />
                   Add Guest to List
                 </Button>
               )}
@@ -357,3 +357,4 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     </Card>
   );
 }
+
