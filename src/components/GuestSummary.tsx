@@ -30,15 +30,21 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
   useEffect(() => {
     if (typeof navigator !== "undefined" && navigator.share) {
       setIsShareApiAvailable(true);
+    } else {
+      setIsShareApiAvailable(false);
     }
   }, []);
 
   const handlePrint = () => {
+    // This is a placeholder. In a real app, you'd use browser print functionality
+    // or a library to generate a printable view.
+    // For now, let's assume it navigates to a print-specific page or opens print dialog.
+    // router.push('/print-preview'); // Example: if you have a print preview page
     window.print(); 
   };
 
   const handleShare = async () => {
-    if (!isShareApiAvailable) { // Should ideally not be called if button is hidden, but good safeguard
+    if (!isShareApiAvailable) { 
       toast({
         title: "Sharing Not Supported",
         description: 'Share functionality is not available in your browser.',
@@ -53,16 +59,20 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
         text: `Here's the guest list summary: ${summary.totalGuests} guests. Adults: ${summary.totalAdults}, Children: ${summary.totalChildren}.`,
         // url: window.location.href // Optional: you can share the current page URL
       });
-    } catch (error: any) {
-      console.error('Error sharing:', error);
+    } catch (error: unknown) {
+      // console.error('Error sharing:', error); // Removed to prevent Next.js overlay for handled errors
       let toastDescription = 'Sharing failed. Your browser might not support this feature or there was an error.';
       
-      // Check if error object and its properties exist before accessing them
-      if (error && error.name === 'AbortError') {
-        // User cancelled the share operation, so we don't need to show an error.
-        return;
-      } else if (error && (error.name === 'NotAllowedError' || (typeof error.message === 'string' && error.message.toLowerCase().includes('permission denied')))) {
-        toastDescription = 'Sharing failed. It seems permission to share was denied or the action was not allowed. Please check your browser settings or try again.';
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          // User cancelled the share operation, so we don't need to show an error toast.
+          return;
+        } else if (error.name === 'NotAllowedError' || error.message.toLowerCase().includes('permission denied')) {
+          toastDescription = 'Sharing failed. It seems permission to share was denied or the action was not allowed. Please check your browser settings or try again.';
+        }
+        // For other Error types, the generic toastDescription will be used.
+      } else {
+        // If it's not an Error instance (e.g., a string was thrown), use the generic message.
       }
       
       toast({
@@ -198,4 +208,3 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
     </Card>
   );
 }
-
