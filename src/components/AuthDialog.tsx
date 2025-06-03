@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -15,17 +15,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Mail } from 'lucide-react';
-
-// Remove the import for `auth` and `sendSignInLinkToEmail` for now
-// import { auth } from '@/lib/firebase'; // Assuming you have this
-// import { sendSignInLinkToEmail } from 'firebase/auth';
-
+import { auth } from '@/lib/firebase'; 
+import { sendSignInLinkToEmail } from 'firebase/auth';
 
 interface AuthDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onLinkSent?: (email: string) => void; // Optional: if you want to do something after attempting to send
+  onLinkSent?: (email: string) => void; 
 }
+
+const EMAIL_FOR_SIGN_IN_KEY = 'emailForSignIn';
 
 export function AuthDialog({ isOpen, onClose, onLinkSent }: AuthDialogProps) {
   const [email, setEmail] = useState('');
@@ -41,44 +40,38 @@ export function AuthDialog({ isOpen, onClose, onLinkSent }: AuthDialogProps) {
     setError(null);
     setIsLoading(true);
 
-    // Placeholder for actual Firebase logic
-    // In a real implementation, you would call Firebase's sendSignInLinkToEmail here
     try {
-      // const actionCodeSettings = {
-      //   url: window.location.origin, // URL to redirect back to
-      //   handleCodeInApp: true, // Must be true
-      // };
-      // await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-      // window.localStorage.setItem('emailForSignIn', email); // Store email for completion
-
-      // For now, simulate success and show a toast
-      setTimeout(() => {
-        toast({
-          title: "Magic Link (Placeholder)",
-          description: `If this were implemented, a sign-in link would be sent to ${email}.`,
-        });
-        if (onLinkSent) {
-          onLinkSent(email);
-        }
-        // onClose(); // Optionally close dialog, or keep it open to show "check your email"
-      }, 1000);
-
+      const actionCodeSettings = {
+        url: `${window.location.origin}/finish-sign-in`, // URL to redirect back to
+        handleCodeInApp: true, // Must be true
+      };
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+      window.localStorage.setItem(EMAIL_FOR_SIGN_IN_KEY, email); // Store email for completion
+      
+      toast({
+        title: "Check Your Email",
+        description: `A sign-in link has been sent to ${email}. Click the link to sign in.`,
+      });
+      if (onLinkSent) {
+        onLinkSent(email);
+      }
+      // Optionally close dialog, or keep it open to show "check your email"
+      // onClose(); 
     } catch (err: any) {
       console.error("Error sending sign-in link:", err);
-      setError(err.message || "Failed to send sign-in link. Please try again.");
+      const errorMessage = err.message || "Failed to send sign-in link. Please try again.";
+      setError(errorMessage);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: err.message || "Failed to send sign-in link.",
+        title: "Error Sending Link",
+        description: errorMessage,
       });
     } finally {
-      // Simulate delay even for placeholder
-      setTimeout(() => setIsLoading(false), 1000);
+      setIsLoading(false);
     }
   };
 
-  // Reset state when dialog opens/closes
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isOpen) {
       setEmail('');
       setError(null);
@@ -88,7 +81,7 @@ export function AuthDialog({ isOpen, onClose, onLinkSent }: AuthDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md AuthDialog">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5 text-primary" />
@@ -116,7 +109,7 @@ export function AuthDialog({ isOpen, onClose, onLinkSent }: AuthDialogProps) {
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button onClick={handleSendMagicLink} disabled={isLoading}>
+          <Button onClick={handleSendMagicLink} disabled={isLoading} className="bg-accent hover:bg-accent/90 text-accent-foreground">
             {isLoading ? "Sending..." : "Send Magic Link"}
           </Button>
         </DialogFooter>
