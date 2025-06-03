@@ -1,7 +1,7 @@
 
 "use client";
 
-import { PlusCircle, ListChecks, Mic, Users } from 'lucide-react';
+import { PlusCircle, ListChecks, Users } from 'lucide-react'; // Removed Mic
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -42,6 +42,7 @@ export function BottomNavbar() {
     <nav className="fixed bottom-0 left-0 right-0 h-16 bg-card border-t border-border shadow-md md:hidden z-50">
       <div className="container mx-auto h-full">
         <ul className="flex justify-around items-center h-full">
+          {/* 1. Add Button */}
           <li className="flex-1 h-full">
             <button
               onClick={handleNavAndScrollToForm}
@@ -53,38 +54,43 @@ export function BottomNavbar() {
               <span className="text-xs mt-1">Add</span>
             </button>
           </li>
-          <li className="flex-1 h-full">
-            <button
-              onClick={handleNavAndScrollToForm} 
-              className={getItemClasses(isAddPageActive)} // Voice input is part of Add page
-              aria-label="Use Voice Input"
-              aria-current={mounted && isAddPageActive ? "page" : undefined}
-            >
-              <Mic className="h-6 w-6" />
-              <span className="text-xs mt-1">Voice</span>
-            </button>
-          </li>
-          <li className="flex-1 h-full">
-            <Link href="/guest-list" passHref legacyBehavior>
-              <a 
-                className={getItemClasses(isGuestListPageActive)}
-                aria-label="View Guest List"
-                aria-current={mounted && isGuestListPageActive ? "page" : undefined}
-              >
-                <Users className="h-6 w-6" />
-                <span className="text-xs mt-1">List</span>
-              </a>
-            </Link>
-          </li>
+
+          {/* 2. Summary Button */}
           <li className="flex-1 h-full">
             <Link href="/summary" passHref legacyBehavior>
               <a
                 className={getItemClasses(isSummaryPageActive)}
                 aria-label="View Summary"
                 aria-current={mounted && isSummaryPageActive ? "page" : undefined}
+                onClick={(e) => {
+                  if (pathname === '/summary') {
+                    e.preventDefault(); // Prevent re-navigation if already on summary page
+                    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top
+                  }
+                }}
               >
                 <ListChecks className="h-6 w-6" />
                 <span className="text-xs mt-1">Summary</span>
+              </a>
+            </Link>
+          </li>
+
+          {/* 3. List Button */}
+          <li className="flex-1 h-full">
+            <Link href="/guest-list" passHref legacyBehavior>
+              <a 
+                className={getItemClasses(isGuestListPageActive)}
+                aria-label="View Guest List"
+                aria-current={mounted && isGuestListPageActive ? "page" : undefined}
+                 onClick={(e) => {
+                  if (pathname === '/guest-list') {
+                    e.preventDefault(); 
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+                }}
+              >
+                <Users className="h-6 w-6" />
+                <span className="text-xs mt-1">List</span>
               </a>
             </Link>
           </li>
