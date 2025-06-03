@@ -18,8 +18,8 @@ export function BottomNavbar() {
   }, []);
 
   // Determine active state only after component has mounted
-  const isMainPage = mounted ? pathname === '/' : false;
-  const isGuestListPage = mounted ? pathname === '/guest-list' : false;
+  const isMainPageActive = mounted ? pathname === '/' : false;
+  const isGuestListPageActive = mounted ? pathname === '/guest-list' : false;
 
   const getItemClasses = (isActive: boolean) => {
     return cn(
@@ -31,16 +31,12 @@ export function BottomNavbar() {
   };
 
   const handleNavAndScroll = (elementId: string) => {
-    if (pathname === '/guest-list') { // Check current pathname, not potentially stale isGuestListPage
+    if (pathname === '/guest-list') { 
       router.push(`/#${elementId}`);
     } else {
       scrollToElement(elementId);
     }
   };
-
-  // When not mounted, the isMainPage and isGuestListPage will be false, 
-  // leading to default "inactive" styles. This ensures server render and initial client render match.
-  // The actual active styles will be applied after useEffect runs and mounted becomes true.
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 h-16 bg-card border-t border-border shadow-md md:hidden z-50">
@@ -49,9 +45,9 @@ export function BottomNavbar() {
           <li className="flex-1 h-full">
             <button
               onClick={() => handleNavAndScroll('guest-form-section')}
-              className={getItemClasses(isMainPage)}
+              className={getItemClasses(isMainPageActive)}
               aria-label="Add Guest"
-              aria-current={isMainPage ? "page" : undefined}
+              aria-current={mounted && isMainPageActive ? "page" : undefined}
             >
               <PlusCircle className="h-6 w-6" />
               <span className="text-xs mt-1">Add</span>
@@ -60,9 +56,9 @@ export function BottomNavbar() {
           <li className="flex-1 h-full">
             <button
               onClick={() => handleNavAndScroll('guest-form-section')} 
-              className={getItemClasses(isMainPage)}
+              className={getItemClasses(isMainPageActive)}
               aria-label="Use Voice Input"
-              aria-current={isMainPage ? "page" : undefined}
+              aria-current={mounted && isMainPageActive ? "page" : undefined}
             >
               <Mic className="h-6 w-6" />
               <span className="text-xs mt-1">Voice</span>
@@ -71,9 +67,9 @@ export function BottomNavbar() {
           <li className="flex-1 h-full">
             <Link href="/guest-list" passHref legacyBehavior>
               <a 
-                className={getItemClasses(isGuestListPage)}
+                className={getItemClasses(isGuestListPageActive)}
                 aria-label="View Guest List"
-                aria-current={isGuestListPage ? "page" : undefined}
+                aria-current={mounted && isGuestListPageActive ? "page" : undefined}
               >
                 <Users className="h-6 w-6" />
                 <span className="text-xs mt-1">List</span>
@@ -83,9 +79,9 @@ export function BottomNavbar() {
           <li className="flex-1 h-full">
             <button
               onClick={() => handleNavAndScroll('guest-summary-section')}
-              className={getItemClasses(isMainPage)}
+              className={getItemClasses(isMainPageActive)}
               aria-label="View Summary"
-              aria-current={isMainPage ? "page" : undefined}
+              aria-current={mounted && isMainPageActive ? "page" : undefined}
             >
               <ListChecks className="h-6 w-6" />
               <span className="text-xs mt-1">Summary</span>
@@ -96,3 +92,4 @@ export function BottomNavbar() {
     </nav>
   );
 }
+
