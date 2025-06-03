@@ -73,8 +73,7 @@ export default function GuestListPage() {
           <h1 className="text-2xl sm:text-3xl font-headline text-primary text-center flex-grow px-4">
             Guest List Preview
           </h1>
-          {/* Save List button is removed from here */}
-           <div className="w-10 h-10"></div> {/* Placeholder for spacing if Save button was on the right */}
+           <div className="w-10 h-10"></div> {/* Placeholder for spacing */}
         </div>
       </header>
 
@@ -98,8 +97,8 @@ export default function GuestListPage() {
                   Save List
                 </Button>
                 <Link href="/" passHref>
-                  <Button> {/* This is already primary */}
-                    <Users className="mr-2 h-4 w-4" /> Go to Planner
+                  <Button variant="default"> {/* Ensure primary (orange) styling */}
+                    <ArrowLeft className="mr-2 h-4 w-4" /> Back to Planner
                   </Button>
                 </Link>
               </div>
