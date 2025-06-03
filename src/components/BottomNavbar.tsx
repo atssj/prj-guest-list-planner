@@ -47,7 +47,7 @@ export function BottomNavbar() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-card border-t border-border shadow-md md:hidden z-50">
+    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-card border-t border-border shadow-md z-50">
       <div className="container mx-auto h-full">
         <ul className="flex justify-around items-center h-full">
           {/* 1. Add Button */}
