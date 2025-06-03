@@ -268,7 +268,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                         variant="ghost"
                         size="icon"
                         onClick={() => remove(index)}
-                        className="col-span-1 text-destructive hover:text-destructive/80 mt-0"
+                        className="col-span-1 text-destructive mt-0"
                         aria-label={`Remove other meal ${index + 1}`}
                       >
                         <Trash2 className="h-4 w-4" />
