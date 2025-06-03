@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import type { Guest } from "@/lib/types";
 import { PlusCircle, Users, Utensils, Salad, Beef, Grape, Wheat, Trash2, ArrowLeft, ArrowRight } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+// Removed useToast import as it's now handled by the parent page
 import React, { useState } from "react";
 
 const otherMealPreferenceSchema = z.object({
@@ -41,12 +41,12 @@ const guestFormSchema = z.object({
 })
 .refine((data) => data.adults + data.children > 0, {
   message: "At least one guest (adult or child) is required.",
-  path: ["adults"], // This error will show under adults field or a general form error area
+  path: ["adults"], 
 })
 .refine(
   (data) => {
     const totalPeople = data.adults + data.children;
-    if (totalPeople === 0) return true; // Skip this check if no guests, covered by above refine
+    if (totalPeople === 0) return true; 
     const otherMealsCount = data.mealPreferences.otherMeals?.reduce((sum, meal) => sum + (meal.count || 0), 0) || 0;
     const totalMeals =
       (data.mealPreferences.veg || 0) +
@@ -57,7 +57,7 @@ const guestFormSchema = z.object({
   },
   {
     message: "Total number of meals must equal the total number of guests.",
-    path: ["mealPreferences.veg"], // Error will appear under the first meal preference field or a general area
+    path: ["mealPreferences.veg"], 
   }
 );
 
@@ -68,7 +68,7 @@ interface GuestFormProps {
 }
 
 export function GuestForm({ onAddGuest }: GuestFormProps) {
-  const { toast } = useToast();
+  // Removed toast instance
   const [currentStep, setCurrentStep] = useState(1);
 
   const form = useForm<GuestFormValues>({
@@ -84,7 +84,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
         otherMeals: [],
       },
     },
-    mode: "onChange", // Needed for more responsive error messages during step changes
+    mode: "onChange", 
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -100,13 +100,9 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
         otherMeals: data.mealPreferences.otherMeals || [],
       },
     };
-    onAddGuest(guestData);
-    toast({
-      title: "Guest Added",
-      description: `${data.familyName} family has been added to the list.`,
-    });
+    onAddGuest(guestData); // Parent will handle toast and UI changes
     form.reset();
-    setCurrentStep(1); // Reset to the first step
+    setCurrentStep(1); 
   }
 
   const adultsCount = form.watch("adults");
@@ -114,11 +110,9 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
   const totalPeople = (adultsCount || 0) + (childrenCount || 0);
 
   const handleNextStep = async () => {
-    // Trigger validation for step 1 fields
     const isValidStep1 = await form.trigger(["familyName", "adults", "children"]);
     
     if (isValidStep1) {
-       // Manually check the refine condition for adults + children > 0 as trigger might not catch it directly
        const adults = form.getValues("adults");
        const children = form.getValues("children");
        if (adults + children === 0) {
@@ -152,7 +146,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center gap-2">
           {currentStep === 1 ? <Users className="h-6 w-6 text-primary" /> : <Utensils className="h-6 w-6 text-primary" />}
-          {currentStep === 1 ? "Add Guest" : "Meal Preferences"}
+          {currentStep === 1 ? "Add Guest Details" : "Set Meal Preferences"}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -202,7 +196,6 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     )}
                   />
                 </div>
-                 {/* Display the "At least one guest" error here if it's triggered for adults path */}
                 {form.formState.errors.adults && form.formState.errors.adults.type === 'manual' && (
                     <FormMessage>{form.formState.errors.adults.message}</FormMessage>
                 )}
@@ -271,7 +264,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     <FormLabel className="flex items-center gap-2"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal(s)</FormLabel>
                     {fields.map((item, index) => (
                       <div key={item.id} className="p-2 border rounded-md bg-background/50 shadow-inner">
-                        <div className="grid grid-cols-10 gap-2 items-start"> {/* Changed items-center to items-start */}
+                        <div className="grid grid-cols-10 gap-2 items-start">
                           <FormField
                             control={form.control}
                             name={`mealPreferences.otherMeals.${index}.name`}
@@ -331,7 +324,6 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                         </div>
                     ))}
                   </div>
-                   {/* Display the "Total number of meals must equal..." error here if it's on mealPreferences.veg */}
                    {form.formState.errors.mealPreferences?.veg?.type === 'custom' && (
                     <FormMessage>{form.formState.errors.mealPreferences.veg.message}</FormMessage>
                    )}
@@ -355,7 +347,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
               {currentStep === 2 && (
                 <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground">
                   <PlusCircle className="mr-2 h-5 w-5" />
-                  Add Guest
+                  Add Guest to List
                 </Button>
               )}
             </div>
@@ -365,5 +357,3 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     </Card>
   );
 }
-
-    
