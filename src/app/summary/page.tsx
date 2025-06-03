@@ -112,7 +112,7 @@ export default function SummaryPage() {
       </main>
        <footer className="text-center py-6 mt-auto">
         <p className="text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Shaadi Planner. Summary Page.
+          &copy; {new Date().getFullYear()} Guest List Planner. Summary Page.
         </p>
       </footer>
       <AuthDialog

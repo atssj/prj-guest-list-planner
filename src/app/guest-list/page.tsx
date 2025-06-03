@@ -81,7 +81,7 @@ export default function GuestListPage() {
             </Button>
           )}
           {guests.length === 0 && (
-             <div className="w-10 h-10 md:w-auto"></div> // Placeholder to maintain layout balance when save button isn't shown
+             <div className="w-10 h-10 md:w-auto"></div> 
           )}
         </div>
       </header>
@@ -156,7 +156,7 @@ export default function GuestListPage() {
       </main>
        <footer className="text-center py-6 mt-auto">
         <p className="text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Shaadi Planner. Guest List Page.
+          &copy; {new Date().getFullYear()} Guest List Planner. Guest List Page.
         </p>
       </footer>
       <AuthDialog

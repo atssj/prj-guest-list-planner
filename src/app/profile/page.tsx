@@ -72,7 +72,7 @@ export default function ProfilePage() {
 
        <footer className="text-center py-6 mt-auto">
         <p className="text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Shaadi Planner. Profile Page.
+          &copy; {new Date().getFullYear()} Guest List Planner. Profile Page.
         </p>
       </footer>
     </div>

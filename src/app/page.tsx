@@ -4,15 +4,6 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import type { Metadata } from 'next'; // For potential page-specific metadata if needed later
-
-// While metadata is usually in layout.tsx or page.tsx server components,
-// we can define it here if this page were to be a server component.
-// For client components, it's primarily handled by RootLayout.
-// export const metadata: Metadata = {
-//   title: 'Shaadi Planner - Effortless Wedding Guest List Management',
-//   description: 'Plan your perfect Indian wedding guest list with Shaadi Planner. Easily add guests, manage preferences, and get a clear summary. Start planning today!',
-// };
 
 export default function HomePage() {
   return (
@@ -22,16 +13,16 @@ export default function HomePage() {
           <Sparkles className="h-12 w-12 text-primary" />
         </div>
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-headline text-primary">
-          Shaadi Planner
+          Guest List Planner
         </h1>
         <p className="text-lg sm:text-xl text-foreground/80 leading-relaxed">
-          Your Partner in Perfect Wedding Guest Management.
+          Your Partner in Perfect Guest Management.
           <br />
-          Seamlessly organize your wedding invitations for your special day.
+          Seamlessly organize your guest lists for any event.
         </p>
         <p className="text-md text-muted-foreground">
-          Add family names, specify guest counts, select food preferences, and watch your guest list grow.
-          Designed with the warmth and vibrancy of Indian weddings in mind.
+          Add guest names, specify counts, note preferences, and watch your list grow.
+          Perfect for parties, gatherings, and any occasion.
         </p>
         <div className="mt-8">
           <Link href="/add-guest" passHref>
@@ -44,7 +35,7 @@ export default function HomePage() {
       </main>
       <footer className="absolute bottom-6 text-center w-full">
         <p className="text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Shaadi Planner. All rights reserved.
+          &copy; {new Date().getFullYear()} Guest List Planner. All rights reserved.
         </p>
       </footer>
     </div>
