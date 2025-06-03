@@ -73,15 +73,8 @@ export default function GuestListPage() {
           <h1 className="text-2xl sm:text-3xl font-headline text-primary text-center flex-grow px-4">
             Guest List Preview
           </h1>
-          <Button
-            variant={guests.length > 0 ? "default" : "outline"}
-            onClick={handleSaveListClick}
-            disabled={guests.length === 0}
-            className={guests.length > 0 ? "" : "ml-auto"} // Ensure consistent spacing logic if needed
-          >
-            <Save className="mr-2 h-4 w-4" />
-            Save List
-          </Button>
+          {/* Save List button is removed from here */}
+           <div className="w-10 h-10"></div> {/* Placeholder for spacing if Save button was on the right */}
         </div>
       </header>
 
@@ -95,11 +88,21 @@ export default function GuestListPage() {
               <p className="text-muted-foreground mb-4">
                 Your guest list is currently empty. Go back to the planner to add some guests!
               </p>
-              <Link href="/" passHref>
-                <Button> {/* This is already primary */}
-                  <Users className="mr-2 h-4 w-4" /> Go to Planner
+              <div className="flex justify-center items-center gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={handleSaveListClick}
+                  disabled // Always disabled here as guests.length will be 0
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  Save List
                 </Button>
-              </Link>
+                <Link href="/" passHref>
+                  <Button> {/* This is already primary */}
+                    <Users className="mr-2 h-4 w-4" /> Go to Planner
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
         ) : (
