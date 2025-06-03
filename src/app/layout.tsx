@@ -25,7 +25,7 @@ export default function RootLayout({
         <div className="flex-grow md:pb-0 pb-16"> {/* Adjust padding for bottom navbar */}
           {children}
         </div>
-        <Toaster />
+        <Toaster /> {/* Ensure Toaster is here for AuthDialog toasts */}
         <BottomNavbar />
       </body>
     </html>

@@ -7,14 +7,67 @@ import { GuestForm } from "@/components/GuestForm";
 import { GuestSummary } from "@/components/GuestSummary";
 import type { Guest, GuestSummaryData } from "@/lib/types";
 import { INITIAL_SUMMARY } from "@/lib/types";
+import { AuthDialog } from "@/components/AuthDialog"; // Import AuthDialog
+import { useToast } from "@/hooks/use-toast"; // Import useToast
 
-const GUEST_LIST_STORAGE_KEY = "guestListData_v2"; // Version incremented due to data structure change
+// import { auth, db } from "@/lib/firebase"; // For future Firebase integration
+// import { onAuthStateChanged, type User } from "firebase/auth";
+// import { doc, setDoc, getDoc } from "firebase/firestore";
+
+const GUEST_LIST_STORAGE_KEY = "guestListData_v2";
 
 export default function GuestListPlannerPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [summary, setSummary] = useState<GuestSummaryData>(INITIAL_SUMMARY);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+  // const [currentUser, setCurrentUser] = useState<User | null>(null); // For Firebase auth state
+  // const [isSaving, setIsSaving] = useState(false); // For Firestore saving state
+  const { toast } = useToast();
 
-  useEffect(() => {
+
+  // Placeholder for Firebase Auth state listener
+  // useEffect(() => {
+  //   const unsubscribe = onAuthStateChanged(auth, (user) => {
+  //     setCurrentUser(user);
+  //     if (user) {
+  //       // User is signed in, try to load their list from Firestore
+  //       // loadGuestListFromFirestore(user.uid);
+  //       toast({ title: "Signed In", description: `Welcome ${user.email}` });
+  //     } else {
+  //       // User is signed out, load from localStorage
+  //       loadGuestsFromLocalStorage();
+  //     }
+  //   });
+  //   return () => unsubscribe();
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []);
+
+  // Placeholder for handling sign-in with email link
+  // useEffect(() => {
+  //   if (isSignInWithEmailLink(auth, window.location.href)) {
+  //     let email = window.localStorage.getItem('emailForSignIn');
+  //     if (!email) {
+  //       email = window.prompt('Please provide your email for confirmation');
+  //     }
+  //     if (email) {
+  //       signInWithEmailLink(auth, email, window.location.href)
+  //         .then((result) => {
+  //           window.localStorage.removeItem('emailForSignIn');
+  //           setCurrentUser(result.user);
+  //           toast({ title: "Successfully Signed In!", description: "Your guest list can now be saved online."});
+  //           // You can access the new user via result.user
+  //           // Additional state operations like setting user/checking account etc.
+  //         })
+  //         .catch((error) => {
+  //           console.error("Error signing in with email link", error);
+  //           toast({ variant: "destructive", title: "Sign In Error", description: error.message });
+  //         });
+  //     }
+  //   }
+  // }, []);
+
+
+  const loadGuestsFromLocalStorage = () => {
     const storedGuests = localStorage.getItem(GUEST_LIST_STORAGE_KEY);
     if (storedGuests) {
       try {
@@ -22,14 +75,21 @@ export default function GuestListPlannerPage() {
         if (Array.isArray(parsedGuests) && parsedGuests.every(g => typeof g.mealPreferences === 'object')) {
           setGuests(parsedGuests);
         } else {
-          // Invalid structure or old data, clear it
           localStorage.removeItem(GUEST_LIST_STORAGE_KEY);
         }
       } catch (error) {
-        localStorage.removeItem(GUEST_LIST_STORAGE_KEY); 
+        localStorage.removeItem(GUEST_LIST_STORAGE_KEY);
       }
     }
+  };
+
+  // Load from local storage on initial mount
+  useEffect(() => {
+    // For now, always load from local storage.
+    // This will be conditional when Firebase auth is fully integrated.
+    loadGuestsFromLocalStorage();
   }, []);
+
 
   useEffect(() => {
     let totalAdults = 0;
@@ -57,17 +117,60 @@ export default function GuestListPlannerPage() {
   }, [guests]);
 
   useEffect(() => {
-    localStorage.setItem(GUEST_LIST_STORAGE_KEY, JSON.stringify(guests));
-  }, [guests]);
+    // Save to local storage if not logged in, or as a backup
+    // if (!currentUser) { // This condition will be used when auth is integrated
+      localStorage.setItem(GUEST_LIST_STORAGE_KEY, JSON.stringify(guests));
+    // }
+  }, [guests /*, currentUser */]);
 
 
   const handleAddGuest = (newGuest: Guest) => {
     setGuests((prevGuests) => [...prevGuests, newGuest]);
   };
 
+  const handleSaveListClick = () => {
+    // if (currentUser) {
+      // setIsSaving(true);
+      // saveGuestListToFirestore(currentUser.uid, guests)
+      //   .then(() => toast({ title: "List Saved!", description: "Your guest list has been saved online." }))
+      //   .catch((e) => toast({ variant: "destructive", title: "Save Error", description: e.message }))
+      //   .finally(() => setIsSaving(false));
+    // } else {
+      setIsAuthDialogOpen(true);
+    // }
+  };
+
+  // Placeholder for saving to Firestore
+  // const saveGuestListToFirestore = async (userId: string, guestList: Guest[]) => {
+  //   if (!db) throw new Error("Firestore not initialized");
+  //   const userListRef = doc(db, "guestLists", userId);
+  //   await setDoc(userListRef, { guests: guestList, updatedAt: new Date() });
+  // };
+
+  // Placeholder for loading from Firestore
+  // const loadGuestListFromFirestore = async (userId: string) => {
+  //   if (!db) return;
+  //   const userListRef = doc(db, "guestLists", userId);
+  //   const docSnap = await getDoc(userListRef);
+  //   if (docSnap.exists()) {
+  //     const data = docSnap.data();
+  //     if (data.guests && Array.isArray(data.guests)) {
+  //       // Simple merge: Firestore takes precedence if both exist
+  //       // More sophisticated merging could be added (e.g. prompt user)
+  //       setGuests(data.guests as Guest[]);
+  //       toast({ title: "List Loaded", description: "Your guest list was loaded from the cloud." });
+  //       localStorage.setItem(GUEST_LIST_STORAGE_KEY, JSON.stringify(data.guests)); // Sync to local
+  //     }
+  //   } else {
+  //     // No list in Firestore, try local storage
+  //     loadGuestsFromLocalStorage();
+  //   }
+  // };
+
+
   return (
     <div className="container mx-auto px-4 py-2 md:px-6 md:py-4 flex flex-col flex-grow">
-      <AppHeader />
+      <AppHeader onSaveListClick={handleSaveListClick} />
       <main className="mt-6 md:mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8 flex-grow">
         <div id="guest-form-section" className="lg:col-span-2 scroll-mt-20">
           <GuestForm onAddGuest={handleAddGuest} />
@@ -81,6 +184,15 @@ export default function GuestListPlannerPage() {
           &copy; {new Date().getFullYear()} Guest List Planner. All rights reserved.
         </p>
       </footer>
+      <AuthDialog
+        isOpen={isAuthDialogOpen}
+        onClose={() => setIsAuthDialogOpen(false)}
+        onLinkSent={(email) => {
+          // You might want to show a specific message or close the dialog here
+          // For now, the dialog's internal toast handles the message.
+          // setIsAuthDialogOpen(false); // Example: close dialog after link is "sent"
+        }}
+      />
     </div>
   );
 }
