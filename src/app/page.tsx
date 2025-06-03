@@ -2,27 +2,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation'; // Import useRouter
 import { AppHeader } from "@/components/AppHeader";
 import { GuestForm } from "@/components/GuestForm";
 import { GuestSummary } from "@/components/GuestSummary";
 import type { Guest, GuestSummaryData, OtherMealPreference } from "@/lib/types";
 import { INITIAL_SUMMARY } from "@/lib/types";
-import { AuthDialog } from "@/components/AuthDialog"; // Import AuthDialog
-import { useToast } from "@/hooks/use-toast"; // Import useToast
+import { AuthDialog } from "@/components/AuthDialog"; 
+import { useToast } from "@/hooks/use-toast"; 
+
 
 // import { auth, db } from "@/lib/firebase"; // For future Firebase integration
 // import { onAuthStateChanged, type User } from "firebase/auth";
 // import { doc, setDoc, getDoc } from "firebase/firestore";
 
-const GUEST_LIST_STORAGE_KEY = "guestListData_v3"; // Incremented version due to data structure change
+const GUEST_LIST_STORAGE_KEY = "guestListData_v3"; 
 
 export default function GuestListPlannerPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [summary, setSummary] = useState<GuestSummaryData>(INITIAL_SUMMARY);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
-  // const [currentUser, setCurrentUser] = useState<User | null>(null); // For Firebase auth state
-  // const [isSaving, setIsSaving] = useState(false); // For Firestore saving state
+  // const [currentUser, setCurrentUser] = useState<User | null>(null); 
+  // const [isSaving, setIsSaving] = useState(false); 
   const { toast } = useToast();
+  const router = useRouter(); // Initialize useRouter
 
 
   // Placeholder for Firebase Auth state listener
@@ -147,6 +150,10 @@ export default function GuestListPlannerPage() {
     // }
   };
 
+  const handleViewListClick = () => {
+    router.push('/guest-list');
+  };
+
   // Placeholder for saving to Firestore
   // const saveGuestListToFirestore = async (userId: string, guestList: Guest[]) => {
   //   if (!db) throw new Error("Firestore not initialized");
@@ -177,7 +184,7 @@ export default function GuestListPlannerPage() {
 
   return (
     <div className="container mx-auto px-4 py-2 md:px-6 md:py-4 flex flex-col flex-grow">
-      <AppHeader onSaveListClick={handleSaveListClick} />
+      <AppHeader onSaveListClick={handleSaveListClick} onViewListClick={handleViewListClick} />
       <main className="mt-6 md:mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8 flex-grow">
         <div id="guest-form-section" className="lg:col-span-2 scroll-mt-20">
           <GuestForm onAddGuest={handleAddGuest} />

@@ -1,13 +1,14 @@
 
 import type React from 'react';
-import { ClipboardList, Save } from 'lucide-react';
+import { ClipboardList, Eye } from 'lucide-react'; // Added Eye icon
 import { Button } from '@/components/ui/button';
 
 interface AppHeaderProps {
   onSaveListClick?: () => void;
+  onViewListClick?: () => void; // New prop for viewing list
 }
 
-export function AppHeader({ onSaveListClick }: AppHeaderProps) {
+export function AppHeader({ onSaveListClick, onViewListClick }: AppHeaderProps) {
   return (
     <header className="py-4 sm:py-6 md:py-8 text-center relative">
       <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
@@ -16,11 +17,17 @@ export function AppHeader({ onSaveListClick }: AppHeaderProps) {
           Guest List Planner
         </h1>
       </div>
-      <p className="text-sm sm:text-md md:text-lg text-muted-foreground">
+      <p className="text-sm sm:text-md md:text-lg text-muted-foreground mb-4">
         Effortlessly manage your guest lists for any occasion.
       </p>
-      {/* Save List button removed from here */}
+      {onViewListClick && (
+         <div className="hidden md:flex justify-center mt-2">
+            <Button variant="outline" onClick={onViewListClick} className="shadow-sm">
+                <Eye className="mr-2 h-4 w-4" />
+                View Full List
+            </Button>
+        </div>
+      )}
     </header>
   );
 }
-
