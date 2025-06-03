@@ -40,11 +40,6 @@ export default function HomePage() {
           </Link>
         </div>
       </main>
-      <footer className="absolute bottom-6 text-center w-full">
-        <p className="text-sm text-muted-foreground">
-          {currentYear !== null ? `© ${currentYear} Guest List Planner. All rights reserved.` : 'Loading year...'}
-        </p>
-      </footer>
     </div>
   );
 }
