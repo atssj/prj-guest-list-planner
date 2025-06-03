@@ -4,7 +4,7 @@ const FooterNote: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <p className="text-center text-sm text-gray-500 py-4">
+    <p className="text-center text-sm text-muted-foreground py-4">
       © {currentYear} Guest List Planner. All rights reserved.
     </p>
   );
