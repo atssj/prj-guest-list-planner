@@ -16,9 +16,10 @@ import {
 interface GuestSummaryProps {
   summary: GuestSummaryData;
   onSaveListClick?: () => void;
+  isSaveDisabled?: boolean;
 }
 
-export function GuestSummary({ summary, onSaveListClick }: GuestSummaryProps) {
+export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false }: GuestSummaryProps) {
   const handlePrint = () => {
     console.log("Print button clicked");
     window.print();
@@ -122,14 +123,24 @@ export function GuestSummary({ summary, onSaveListClick }: GuestSummaryProps) {
       <CardFooter className="mt-auto pt-6">
         <div className="flex w-full gap-0">
           {onSaveListClick && (
-            <Button variant="outline" onClick={onSaveListClick} className="flex-1 shadow-md rounded-r-none">
+            <Button 
+              variant="outline" 
+              onClick={onSaveListClick} 
+              className="flex-1 shadow-md rounded-r-none"
+              disabled={isSaveDisabled}
+            >
               <Save className="mr-2 h-4 w-4" />
               Save List
             </Button>
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="px-2 shadow-md rounded-l-none border-l-0">
+              <Button 
+                variant="outline" 
+                className="px-2 shadow-md rounded-l-none border-l-0"
+                disabled={isSaveDisabled}
+                aria-label="More options"
+              >
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

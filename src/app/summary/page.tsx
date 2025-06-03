@@ -100,7 +100,11 @@ export default function SummaryPage() {
 
       <main className="flex-grow flex justify-center items-start">
          <div className="w-full lg:max-w-2xl"> {/* Adjusted max-width for summary */}
-            <GuestSummary summary={summary} onSaveListClick={handleSaveListClick} />
+            <GuestSummary 
+              summary={summary} 
+              onSaveListClick={handleSaveListClick} 
+              isSaveDisabled={guests.length === 0}
+            />
          </div>
       </main>
        <footer className="text-center py-6 mt-auto">
