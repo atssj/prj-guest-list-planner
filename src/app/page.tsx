@@ -4,8 +4,15 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export default function HomePage() {
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem-1px)] text-center px-4 py-8 md:py-16 bg-gradient-to-br from-background to-secondary/30 animate-in fade-in-50 duration-1000">
       <main className="flex flex-col items-center space-y-8 max-w-2xl">
@@ -35,7 +42,7 @@ export default function HomePage() {
       </main>
       <footer className="absolute bottom-6 text-center w-full">
         <p className="text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Guest List Planner. All rights reserved.
+          {currentYear !== null ? `© ${currentYear} Guest List Planner. All rights reserved.` : 'Loading year...'}
         </p>
       </footer>
     </div>
