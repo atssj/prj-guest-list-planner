@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -66,7 +67,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
   }
 
   return (
-    <Card className="shadow-lg">
+    <Card className="shadow-lg w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center gap-2">
           <Users className="h-6 w-6 text-primary" />
@@ -89,7 +90,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="adults"
@@ -141,7 +142,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button type="submit" className="w-full text-lg py-6 bg-accent hover:bg-accent/90 text-accent-foreground">
               <PlusCircle className="mr-2 h-5 w-5" />
               Add Guest
             </Button>
