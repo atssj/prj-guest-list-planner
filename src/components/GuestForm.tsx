@@ -17,10 +17,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Guest, MealPreferences, OtherMealPreference } from "@/lib/types";
-import { PlusCircle, Users, Utensils, Salad, Beef, Grape, Wheat, Trash2 } from "lucide-react"; // Removed Mic, Loader2
+import { PlusCircle, Users, Utensils, Salad, Beef, Grape, Wheat, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import React from "react"; // Removed useState, useRef, useEffect
-// import { parseGuestInfo } from "@/ai/flows/parse-guest-info-flow"; // Removed AI flow import
+import React from "react";
 
 const otherMealPreferenceSchema = z.object({
   name: z.string().min(1, "Meal name is required."),
@@ -89,15 +88,6 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     name: "mealPreferences.otherMeals",
   });
 
-  // Voice input state and logic removed:
-  // const [isListening, setIsListening] = useState(false);
-  // const [isProcessingAI, setIsProcessingAI] = useState(false);
-  // const [voiceError, setVoiceError] = useState<string | null>(null);
-  // const recognitionRef = useRef<SpeechRecognition | null>(null);
-  // const [hasSpeechRecognition, setHasSpeechRecognition] = useState(false);
-  // useEffect for SpeechRecognitionAPI removed.
-  // handleToggleListening function removed.
-
   function onSubmit(data: GuestFormValues) {
     const guestData: Guest = {
       ...data,
@@ -126,9 +116,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
             <Users className="h-6 w-6 text-primary" />
             Add Guest
           </CardTitle>
-          {/* Microphone button and related elements removed */}
         </div>
-        {/* Messages related to voice input removed */}
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -241,7 +229,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                         control={form.control}
                         name={`mealPreferences.otherMeals.${index}.name`}
                         render={({ field }) => (
-                          <FormItem className="col-span-6">
+                          <FormItem className="col-span-7"> {/* Changed from col-span-6 */}
                             <FormLabel className="sr-only">Other Meal Name {index + 1}</FormLabel>
                             <FormControl>
                               <Input placeholder="Meal Name" {...field} />
@@ -254,7 +242,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                         control={form.control}
                         name={`mealPreferences.otherMeals.${index}.count`}
                         render={({ field }) => (
-                          <FormItem className="col-span-3">
+                          <FormItem className="col-span-2"> {/* Changed from col-span-3 */}
                              <FormLabel className="sr-only">Other Meal Count {index + 1}</FormLabel>
                             <FormControl>
                               <Input type="number" placeholder="0" {...field} min="1" className="text-center" />
@@ -313,3 +301,4 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     </Card>
   );
 }
+
