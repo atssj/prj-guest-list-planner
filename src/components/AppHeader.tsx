@@ -10,7 +10,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ onSaveListClick, onViewListClick }: AppHeaderProps) {
   return (
-    <header className="py-2 sm:py-3 md:py-4 text-center relative">
+    <header className="py-1 sm:py-2 md:py-2 text-center relative">
       <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
         <ClipboardList className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-primary" />
         <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-headline text-primary">
