@@ -4,8 +4,14 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { GuestSummaryData } from "@/lib/types";
-import { Users, Baby, UtensilsCrossed, ListChecks, Salad, Beef, Grape, Wheat, Save, Printer, Share2 } from "lucide-react";
+import { Users, Baby, UtensilsCrossed, ListChecks, Salad, Beef, Grape, Wheat, Save, Printer, Share2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface GuestSummaryProps {
   summary: GuestSummaryData;
@@ -14,20 +20,17 @@ interface GuestSummaryProps {
 
 export function GuestSummary({ summary, onSaveListClick }: GuestSummaryProps) {
   const handlePrint = () => {
-    // Placeholder for print functionality
     console.log("Print button clicked");
-    window.print(); // Basic browser print
+    window.print();
   };
 
   const handleShare = async () => {
-    // Placeholder for share functionality
     console.log("Share button clicked");
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'Guest List Summary',
           text: `Here's the guest list summary: ${summary.totalGuests} guests. Adults: ${summary.totalAdults}, Children: ${summary.totalChildren}.`,
-          // url: window.location.href, // You might want to share the current URL or a link to a saved list
         });
         console.log('Content shared successfully');
       } catch (error) {
@@ -36,8 +39,6 @@ export function GuestSummary({ summary, onSaveListClick }: GuestSummaryProps) {
       }
     } else {
       alert('Share functionality is not supported in your browser. You can manually copy the details.');
-      // Fallback for browsers that don't support Web Share API
-      // e.g., copy text to clipboard
     }
   };
 
@@ -52,7 +53,6 @@ export function GuestSummary({ summary, onSaveListClick }: GuestSummaryProps) {
             </CardTitle>
             <CardDescription>Real-time overview of your guest list.</CardDescription>
           </div>
-          {/* Save List button removed from here */}
         </div>
       </CardHeader>
       <CardContent className="space-y-4 flex-grow">
@@ -120,21 +120,30 @@ export function GuestSummary({ summary, onSaveListClick }: GuestSummaryProps) {
         </div>
       </CardContent>
       <CardFooter className="mt-auto pt-6">
-        <div className="flex flex-col sm:flex-row gap-2 w-full">
+        <div className="flex w-full gap-0">
           {onSaveListClick && (
-            <Button variant="outline" onClick={onSaveListClick} className="flex-1 shadow-md">
+            <Button variant="outline" onClick={onSaveListClick} className="flex-1 shadow-md rounded-r-none">
               <Save className="mr-2 h-4 w-4" />
               Save List
             </Button>
           )}
-          <Button variant="outline" onClick={handlePrint} className="flex-1 shadow-md">
-            <Printer className="mr-2 h-4 w-4" />
-            Print
-          </Button>
-          <Button variant="outline" onClick={handleShare} className="flex-1 shadow-md">
-            <Share2 className="mr-2 h-4 w-4" />
-            Share
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="px-2 shadow-md rounded-l-none border-l-0">
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={handlePrint}>
+                <Printer className="mr-2 h-4 w-4" />
+                Print
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleShare}>
+                <Share2 className="mr-2 h-4 w-4" />
+                Share
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardFooter>
     </Card>
