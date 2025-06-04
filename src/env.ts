@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 const EnvironmentSchema = z.object({
@@ -33,11 +34,16 @@ const rawEnv = {
 const parsedEnv = EnvironmentSchema.safeParse(rawEnv);
 
 if (!parsedEnv.success) {
+  const fieldErrors = parsedEnv.error.flatten().fieldErrors;
+  const errorMessages = Object.entries(fieldErrors)
+    .map(([key, messages]) => `  - ${key}: ${messages?.join(', ')}`)
+    .join('\n');
   console.error(
-    '❌ Invalid environment variables (public or server placeholder):',
-    parsedEnv.error.flatten().fieldErrors
+    '❌ Critical Error: Missing or invalid environment variables found:\n' +
+    errorMessages +
+    '\n\nPlease check your .env file or server configuration and ensure all required variables are set correctly.'
   );
-  throw new Error('Invalid environment variables. Please check your .env file and Next.js documentation for environment variables.');
+  throw new Error('Application startup failed due to missing/invalid environment variables.');
 }
 
 // Perform a stricter check for server-only variables when on the server.
@@ -47,11 +53,16 @@ if (typeof window === 'undefined') { // Running on the server
   });
   const serverParsed = serverOnlySchema.safeParse(parsedEnv.data);
   if (!serverParsed.success) {
+    const fieldErrors = serverParsed.error.flatten().fieldErrors;
+    const errorMessages = Object.entries(fieldErrors)
+      .map(([key, messages]) => `  - ${key}: ${messages?.join(', ')}`)
+      .join('\n');
     console.error(
-      '❌ Invalid or missing server-side environment variables:',
-      serverParsed.error.flatten().fieldErrors
+      '❌ Critical Server Error: Missing or invalid server-side environment variables:\n' +
+      errorMessages +
+      '\n\nPlease check your .env file or server configuration.'
     );
-    throw new Error('Invalid or missing server-side environment variables. Check .env file.');
+    throw new Error('Application startup failed due to missing/invalid server-side environment variables.');
   }
 }
 
