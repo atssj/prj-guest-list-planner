@@ -3,38 +3,62 @@
 
 import type React from 'react';
 import Link from "next/link";
-import { ArrowLeft, UserCircle2, LogIn, LogOut } from "lucide-react";
+import { ArrowLeft, UserCircle2, LogIn, LogOut, ShieldQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useEffect, useState } from 'react';
 import { auth } from '@/lib/firebase';
 import type { User } from 'firebase/auth';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut, signInAnonymously } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
-import { AuthDialog } from "@/components/AuthDialog"; // Import AuthDialog
+import { AuthDialog } from "@/components/AuthDialog";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false); // State for AuthDialog
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        // No user, try to sign in anonymously
+        try {
+          const userCredential = await signInAnonymously(auth);
+          setUser(userCredential.user);
+          toast({
+            title: "Browsing as Guest",
+            description: "You are currently signed in anonymously.",
+          });
+        } catch (error: any) {
+          console.error("Error signing in anonymously:", error);
+          setUser(null); // Ensure user is null if anonymous sign-in fails
+          toast({
+            variant: "destructive",
+            title: "Guest Sign-In Failed",
+            description: "Could not start a guest session. Some features might be unavailable.",
+          });
+        }
+      }
       setIsLoading(false);
     });
     return () => unsubscribe(); // Cleanup subscription on unmount
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // toast is stable, auth is stable
 
   const handleLogout = async () => {
+    const isAnonymousUser = user?.isAnonymous;
     try {
       await signOut(auth);
+      // User state will be updated by onAuthStateChanged, which will trigger anonymous sign-in again if no other user logs in.
       toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out.",
+        title: isAnonymousUser ? "Guest Session Ended" : "Logged Out",
+        description: isAnonymousUser 
+          ? "You have signed out of your guest session. A new one will start if needed." 
+          : "You have been successfully logged out.",
       });
-      // User state will be updated by onAuthStateChanged
     } catch (error) {
       console.error("Error logging out:", error);
       toast({
@@ -71,7 +95,7 @@ export default function ProfilePage() {
               </Button>
             </Link>
             <h1 className="text-2xl sm:text-3xl font-headline text-primary text-center flex-grow px-4">
-              {user ? "User Profile" : "Access Your Profile"}
+              {user?.isAnonymous ? "Guest Profile" : (user ? "User Profile" : "Access Your Profile")}
             </h1>
             <div className="w-10 h-10 md:w-auto"></div> {/* Spacer for centering title */}
           </div>
@@ -81,22 +105,30 @@ export default function ProfilePage() {
           <Card className="shadow-lg w-full max-w-md">
             <CardHeader>
               <CardTitle className="font-headline text-xl flex items-center gap-2">
-                <UserCircle2 className="h-6 w-6 text-primary" />
-                {user ? "My Profile" : "Guest Access"}
+                {user?.isAnonymous ? <ShieldQuestion className="h-6 w-6 text-primary" /> : <UserCircle2 className="h-6 w-6 text-primary" />}
+                {user?.isAnonymous ? "Guest User" : (user ? "My Profile" : "Sign In / Up")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {user ? (
                 <>
-                  <p className="text-muted-foreground mb-4">
-                    Welcome back, {user.email || "User"}!
-                  </p>
+                  {user.isAnonymous ? (
+                    <CardDescription className="mb-4 text-center">
+                      You are currently browsing as a guest. Your data is stored locally.
+                      Sign in with email to save your lists permanently.
+                    </CardDescription>
+                  ) : (
+                    <p className="text-muted-foreground mb-4">
+                      Welcome back, {user.email || "User"}!
+                    </p>
+                  )}
+
                   <div className="space-y-3">
                     <div className="p-3 border rounded-md bg-secondary/20">
                       <p className="text-sm font-medium">Email</p>
-                      <p className="text-lg">{user.email}</p>
+                      <p className="text-lg">{user.isAnonymous ? "N/A (Guest User)" : user.email}</p>
                     </div>
-                    {user.metadata.creationTime && (
+                    {user.metadata.creationTime && !user.isAnonymous && (
                       <div className="p-3 border rounded-md bg-secondary/20">
                         <p className="text-sm font-medium">Joined</p>
                         <p className="text-lg">{new Date(user.metadata.creationTime).toLocaleDateString()}</p>
@@ -104,18 +136,29 @@ export default function ProfilePage() {
                     )}
                      <div className="p-3 border rounded-md bg-secondary/20">
                       <p className="text-sm font-medium">Account Status</p>
-                      <p className="text-lg">{user.emailVerified ? "Email Verified" : "Email Not Verified"}</p>
+                      <p className="text-lg">
+                        {user.isAnonymous ? "Anonymous Guest" : (user.emailVerified ? "Email Verified" : "Email Not Verified")}
+                      </p>
                     </div>
                   </div>
-                  <Button onClick={handleLogout} variant="outline" className="w-full mt-6">
+                  
+                  {user.isAnonymous && (
+                    <Button onClick={() => setIsAuthDialogOpen(true)} className="w-full mt-6 bg-accent hover:bg-accent/90 text-accent-foreground">
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Log In / Sign Up with Email Link
+                    </Button>
+                  )}
+
+                  <Button onClick={handleLogout} variant="outline" className="w-full mt-3">
                     <LogOut className="mr-2 h-4 w-4" />
-                    Log Out
+                    {user.isAnonymous ? "End Guest Session" : "Log Out"}
                   </Button>
                 </>
               ) : (
+                // This block should ideally not be reached if anonymous sign-in always works or error is handled
                 <>
                   <CardDescription className="mb-4 text-center">
-                    Log in or create an account to save your guest lists, view your event history, and manage your preferences.
+                    Sign in or create an account to save your guest lists, view your event history, and manage your preferences.
                   </CardDescription>
                   <Button onClick={() => setIsAuthDialogOpen(true)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                     <LogIn className="mr-2 h-4 w-4" />
@@ -139,10 +182,11 @@ export default function ProfilePage() {
         isOpen={isAuthDialogOpen}
         onClose={() => setIsAuthDialogOpen(false)}
         onLinkSent={(email) => {
-          // Link sent, dialog can be closed or show a message
-          setIsAuthDialogOpen(false); // Close dialog after link is sent
+          setIsAuthDialogOpen(false);
         }}
       />
     </>
   );
 }
+
+    
