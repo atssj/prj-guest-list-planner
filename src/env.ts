@@ -41,7 +41,7 @@ if (!parsedEnv.success) {
   console.error(
     '❌ Critical Error: Missing or invalid environment variables found:\n' +
     errorMessages +
-    '\n\nPlease check your .env file or server configuration and ensure all required variables are set correctly.'
+    '\n\nPlease check your .env.local file or server configuration and ensure all required variables are set correctly. Restart your development server after making changes.'
   );
   throw new Error('Application startup failed due to missing/invalid environment variables.');
 }
@@ -60,7 +60,7 @@ if (typeof window === 'undefined') { // Running on the server
     console.error(
       '❌ Critical Server Error: Missing or invalid server-side environment variables:\n' +
       errorMessages +
-      '\n\nPlease check your .env file or server configuration.'
+      '\n\nPlease check your .env.local file or server configuration. Restart your development server after making changes.'
     );
     throw new Error('Application startup failed due to missing/invalid server-side environment variables.');
   }
