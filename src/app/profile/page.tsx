@@ -35,10 +35,14 @@ export default function ProfilePage() {
         } catch (error: any) {
           console.error("Error signing in anonymously:", error);
           setUser(null); // Ensure user is null if anonymous sign-in fails
+          let toastMessage = "Could not start a guest session. Some features might be unavailable.";
+          if (error.code === 'auth/admin-restricted-operation') {
+            toastMessage = "Guest sign-in failed. Please ensure Anonymous sign-in is enabled in your Firebase project's Authentication settings.";
+          }
           toast({
             variant: "destructive",
             title: "Guest Sign-In Failed",
-            description: "Could not start a guest session. Some features might be unavailable.",
+            description: toastMessage,
           });
         }
       }
@@ -188,6 +192,4 @@ export default function ProfilePage() {
     </>
   );
 }
-    
-
     
