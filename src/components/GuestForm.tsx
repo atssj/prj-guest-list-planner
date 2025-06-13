@@ -15,10 +15,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Guest } from "@/lib/types";
-import { PlusCircle, Users, Utensils, Salad, Beef, Grape, Wheat, Trash2, ArrowLeft, ArrowRight } from "lucide-react";
-import React, { useState } from "react";
+import { PlusCircle, Users, Utensils, Salad, Beef, Grape, Wheat, Trash2, ArrowLeft, ArrowRight, Mic, Loader2, MicOff } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { parseGuestInfo, type ParseGuestInfoOutput } from "@/ai/flows/parse-guest-info-flow";
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
 
 const otherMealPreferenceSchema = z.object({
   name: z.string().min(1, "Meal name is required."),
@@ -68,6 +72,68 @@ interface GuestFormProps {
 
 export function GuestForm({ onAddGuest }: GuestFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
+  const { toast } = useToast();
+
+  // States for Speech Recognition and AI processing
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [micPermissionError, setMicPermissionError] = useState(false);
+  const [isSpeechApiAvailable, setIsSpeechApiAvailable] = useState(false);
+
+  const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        setIsSpeechApiAvailable(true);
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+          setIsListening(true);
+          setTranscript("");
+          setAiError(null);
+          setMicPermissionError(false);
+        };
+
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
+          const currentTranscript = event.results[0][0].transcript;
+          setTranscript(currentTranscript);
+          handleTranscript(currentTranscript);
+        };
+
+        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+          console.error("Speech recognition error", event.error);
+          setIsListening(false);
+          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            setMicPermissionError(true);
+            toast({
+              variant: "destructive",
+              title: "Microphone Access Denied",
+              description: "Please allow microphone access in your browser settings to use voice input.",
+            });
+          } else if (event.error === 'no-speech') {
+             toast({ variant: "default", title: "No Speech Detected", description: "Please try speaking again."});
+          } else {
+            toast({ variant: "destructive", title: "Voice Input Error", description: `Could not process voice input: ${event.error}` });
+          }
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+        speechRecognitionRef.current = recognition;
+      } else {
+        setIsSpeechApiAvailable(false);
+      }
+    }
+  }, [toast]);
+
 
   const form = useForm<GuestFormValues>({
     resolver: zodResolver(guestFormSchema),
@@ -90,6 +156,56 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     name: "mealPreferences.otherMeals",
   });
 
+  const handleTranscript = async (text: string) => {
+    if (!text.trim()) return;
+    setIsAiProcessing(true);
+    setAiError(null);
+    try {
+      const result: ParseGuestInfoOutput = await parseGuestInfo({ transcript: text });
+      if (result.familyName) form.setValue("familyName", result.familyName, { shouldValidate: true });
+      if (result.adults !== undefined) form.setValue("adults", result.adults, { shouldValidate: true });
+      if (result.children !== undefined) form.setValue("children", result.children, { shouldValidate: true });
+      
+      const familyName = result.familyName || "Guest";
+      const adults = result.adults !== undefined ? result.adults : "no";
+      const children = result.children !== undefined ? result.children : "no";
+      
+      toast({
+        title: "Guest Info Parsed",
+        description: `${familyName}, ${adults} adult(s), ${children} child(ren) details extracted. Please review and proceed.`,
+      });
+      if((result.adults || 0) + (result.children || 0) > 0) {
+         setCurrentStep(1); // Stay on step 1 to review, or auto-advance if needed
+      }
+
+    } catch (error) {
+      console.error("AI parsing error:", error);
+      setAiError("Failed to parse guest information. Please enter manually.");
+      toast({
+        variant: "destructive",
+        title: "AI Parsing Error",
+        description: "Could not understand the guest details from your voice input. Please try again or enter manually.",
+      });
+    } finally {
+      setIsAiProcessing(false);
+    }
+  };
+  
+  const toggleListening = () => {
+    if (!speechRecognitionRef.current) {
+       toast({ variant: "destructive", title: "Voice Input Not Available", description: "Speech recognition is not supported by your browser."});
+      return;
+    }
+    if (isListening) {
+      speechRecognitionRef.current.stop();
+    } else {
+      // Reset any previous permission error display before trying again
+      setMicPermissionError(false); 
+      speechRecognitionRef.current.start();
+    }
+  };
+
+
   function onSubmit(data: GuestFormValues) {
     const guestData: Guest = {
       ...data,
@@ -101,6 +217,8 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     onAddGuest(guestData);
     form.reset();
     setCurrentStep(1); 
+    setTranscript("");
+    setAiError(null);
   }
 
   const adultsCount = form.watch("adults");
@@ -146,9 +264,53 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
           {currentStep === 1 ? <Users className="h-6 w-6 text-primary" /> : <Utensils className="h-6 w-6 text-primary" />}
           {currentStep === 1 ? "Add Guest Details" : "Set Meal Preferences"}
         </CardTitle>
+         {!isSpeechApiAvailable && currentStep === 1 && (
+            <Alert variant="default" className="mt-2">
+              <MicOff className="h-4 w-4" />
+              <AlertTitle>Voice Input Not Available</AlertTitle>
+              <AlertDescription>
+                Your browser does not support speech recognition. Please enter guest details manually.
+              </AlertDescription>
+            </Alert>
+          )}
+          {micPermissionError && currentStep === 1 && (
+             <Alert variant="destructive" className="mt-2">
+                <MicOff className="h-4 w-4" />
+                <AlertTitle>Microphone Access Denied</AlertTitle>
+                <AlertDescription>
+                Please enable microphone permissions in your browser settings to use voice input, then refresh or try again.
+                </AlertDescription>
+            </Alert>
+          )}
       </CardHeader>
       <CardContent>
         <StepIndicator />
+        {currentStep === 1 && isSpeechApiAvailable && !micPermissionError && (
+          <div className="mb-4 space-y-2">
+            <Button 
+              type="button" 
+              onClick={toggleListening} 
+              variant="outline" 
+              className="w-full"
+              disabled={isAiProcessing}
+            >
+              {isListening ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mic className="mr-2 h-4 w-4" />}
+              {isListening ? "Listening..." : (transcript ? "Speak Again" : "Use Voice Input")}
+            </Button>
+            {transcript && !isAiProcessing && (
+              <p className="text-sm text-muted-foreground p-2 border rounded-md bg-secondary/20">
+                Heard: <span className="italic">"{transcript}"</span>
+                {isAiProcessing && " Processing..."}
+              </p>
+            )}
+            {isAiProcessing && (
+               <p className="text-sm text-muted-foreground p-2 border rounded-md bg-secondary/20 flex items-center">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing AI...
+              </p>
+            )}
+            {aiError && <p className="text-sm text-destructive">{aiError}</p>}
+          </div>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {currentStep === 1 && (
@@ -194,7 +356,6 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     )}
                   />
                 </div>
-                {/* Combined error message for adults + children > 0 refine check, if adults field has the error path */}
                 {form.formState.errors.adults && (
                     <FormMessage>{form.formState.errors.adults.message}</FormMessage>
                 )}
@@ -320,8 +481,6 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                         </div>
                     ))}
                   </div>
-                  {/* This message handles the refine rule for total meal balance, anchored to mealPreferences.veg path */}
-                  {/* It will be displayed by the FormMessage inside the veg FormField if that error occurs */}
                 </div>
               </>
             )}
@@ -351,4 +510,17 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
       </CardContent>
     </Card>
   );
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: typeof SpeechRecognition;
+    webkitSpeechRecognition: typeof SpeechRecognition;
+  }
+  interface SpeechRecognitionErrorEvent extends Event {
+    error: string;
+  }
+  interface SpeechRecognitionEvent extends Event {
+    results: SpeechRecognitionResultList;
+  }
 }
