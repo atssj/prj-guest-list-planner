@@ -1,9 +1,23 @@
 
 "use client";
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase'; // auth is correctly imported
+import { isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, Home, MailCheck } from 'lucide-react';
+
+// Define the key locally, as it's also defined locally in AuthDialog.tsx
+const EMAIL_FOR_SIGN_IN_KEY = 'emailForSignIn';
 
 export default function FinishSignInPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'idle'>('loading');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const processSignIn = async () => {
@@ -12,10 +26,6 @@ export default function FinishSignInPage() {
           setStatus('loading');
           let email = window.localStorage.getItem(EMAIL_FOR_SIGN_IN_KEY);
           if (!email) {
-            // User opened the link on a different device or browser.
-            // Prompt user for email.
-            // For simplicity in this iteration, we'll show an error.
-            // A more robust solution would involve a form to re-enter email.
             setErrorMessage("Your email is required to complete sign-in. Please try sending the link again from the original device/browser or ensure cookies/localStorage are enabled.");
             setStatus('error');
             toast({
@@ -34,7 +44,6 @@ export default function FinishSignInPage() {
               title: "Sign-In Successful!",
               description: "You are now signed in.",
             });
-            // Redirect to profile or a desired page
             router.push('/profile'); 
           } catch (error: any) {
             console.error("Error signing in with email link:", error);
@@ -54,17 +63,16 @@ export default function FinishSignInPage() {
           }
         } else {
           // Not a sign-in link, or link already used.
-          // For robustness, you might want to redirect or show a specific message.
-          // For now, we'll just let it be idle or redirect to home.
-          // setStatus('idle');
-          // router.push('/'); 
+          // Consider redirecting or showing a specific message for clarity.
+          setStatus('idle'); 
+          // router.push('/'); // Example: Redirect if not a valid sign-in link context
         }
       }
     };
 
     processSignIn();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router, toast]); // router and toast are stable
+  // eslint-disable-next-line react-hooks/exhaustive-deps 
+  }, [router, toast]); // auth is stable from module scope, window.location.href triggers on mount
 
   return (
     <div className="container mx-auto px-4 py-8 flex flex-col flex-grow items-center justify-center min-h-screen">
@@ -101,7 +109,7 @@ export default function FinishSignInPage() {
               <CardDescription>{errorMessage || "Something went wrong."}</CardDescription>
             </>
           )}
-          {status === 'idle' && !isSignInWithEmailLink(auth, window.location.href) && (
+          {status === 'idle' && (typeof window !== 'undefined' && !isSignInWithEmailLink(auth, window.location.href)) && (
              <>
               <CardTitle className="text-2xl font-headline">Invalid Link</CardTitle>
               <CardDescription>This page is used to complete the sign-in process. If you're trying to sign in, please use the link sent to your email.</CardDescription>
@@ -109,7 +117,7 @@ export default function FinishSignInPage() {
           )}
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-4">
-          {(status === 'error' || (status === 'idle' && !isSignInWithEmailLink(auth, window.location.href))) && (
+          {(status === 'error' || (status === 'idle' && typeof window !== 'undefined' && !isSignInWithEmailLink(auth, window.location.href))) && (
             <Button onClick={() => router.push('/')} variant="default">
               <Home className="mr-2 h-5 w-5" /> Go to Homepage
             </Button>
