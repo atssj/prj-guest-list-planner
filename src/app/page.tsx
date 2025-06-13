@@ -34,7 +34,7 @@ export default function HomePage() {
         <div className="mt-8">
           <Link href="/add-guest" passHref>
             <Button size="lg" className="text-lg py-6 px-8 bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg transform hover:scale-105 transition-transform duration-200">
-              Start Your Guest List
+              Create Guest Invite List
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
