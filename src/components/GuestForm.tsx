@@ -17,9 +17,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Guest } from "@/lib/types";
-import { PlusCircle, Users, Utensils, Salad, Beef, Grape, Wheat, Trash2, ArrowLeft, ArrowRight, Mic, Loader2, MicOff } from "lucide-react";
+import { PlusCircle, Users, Utensils, Salad, Beef, Grape, Wheat, Trash2, ArrowLeft, ArrowRight, Mic, Loader2, MicOff, MessageSquare } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
-import { parseGuestInfo, type ParseGuestInfoOutput } from "@/ai/flows/parse-guest-info-flow";
+// Old flow: import { parseGuestInfo, type ParseGuestInfoOutput } from "@/ai/flows/parse-guest-info-flow";
+import { processGuestUtterance, type ProcessGuestUtteranceInput, type ProcessGuestUtteranceOutput } from "@/ai/flows/process-guest-utterance-flow";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -70,41 +71,65 @@ interface GuestFormProps {
   onAddGuest: (guest: Guest) => void;
 }
 
+type ConversationStage = 'familyName' | 'adults' | 'children' | 'confirm' | 'done' | 'error';
+
+interface GuestDataDraft {
+  familyName?: string;
+  adults?: number;
+  children?: number;
+}
+
 export function GuestForm({ onAddGuest }: GuestFormProps) {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentFormStep, setCurrentFormStep] = useState(1); // 1 for guest details (maybe conversational), 2 for meals
   const { toast } = useToast();
 
   // States for Speech Recognition and AI processing
   const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState("");
+  const [lastTranscript, setLastTranscript] = useState("");
   const [isAiProcessing, setIsAiProcessing] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
   const [micPermissionError, setMicPermissionError] = useState(false);
   const [isSpeechApiAvailable, setIsSpeechApiAvailable] = useState(false);
+  
+  // Conversational AI states
+  const [conversationStage, setConversationStage] = useState<ConversationStage>('familyName');
+  const [currentAiPromptText, setCurrentAiPromptText] = useState("Welcome! Let's add a new guest. What is the family name or the name of the primary guest?");
+  const [guestDataDraft, setGuestDataDraft] = useState<GuestDataDraft>({});
+  const [voiceModeActive, setVoiceModeActive] = useState(false);
+
 
   const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
 
+  const resetConversation = (startVoiceMode = false) => {
+    setConversationStage('familyName');
+    setCurrentAiPromptText("Welcome! Let's add a new guest. What is the family name or the name of the primary guest?");
+    setGuestDataDraft({});
+    setLastTranscript("");
+    setIsAiProcessing(false);
+    if (startVoiceMode) {
+        setVoiceModeActive(true);
+    }
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
+      const SpeechRecognitionAPI = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognitionAPI) {
         setIsSpeechApiAvailable(true);
-        const recognition = new SpeechRecognition();
+        const recognition = new SpeechRecognitionAPI();
         recognition.continuous = false;
         recognition.interimResults = false;
-        recognition.lang = 'bn-IN'; // Changed to Bengali (India)
+        recognition.lang = 'bn-IN'; 
 
         recognition.onstart = () => {
           setIsListening(true);
-          setTranscript("");
-          setAiError(null);
+          setLastTranscript("");
           setMicPermissionError(false);
         };
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
           const currentTranscript = event.results[0][0].transcript;
-          setTranscript(currentTranscript);
-          handleTranscript(currentTranscript);
+          setLastTranscript(currentTranscript); // Show what was heard
+          handleTranscriptProcessing(currentTranscript); // Process it
         };
 
         recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -156,36 +181,95 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     name: "mealPreferences.otherMeals",
   });
 
-  const handleTranscript = async (text: string) => {
-    if (!text.trim()) return;
-    setIsAiProcessing(true);
-    setAiError(null);
-    try {
-      const result: ParseGuestInfoOutput = await parseGuestInfo({ transcript: text });
-      if (result.familyName) form.setValue("familyName", result.familyName, { shouldValidate: true });
-      if (result.adults !== undefined) form.setValue("adults", result.adults, { shouldValidate: true });
-      if (result.children !== undefined) form.setValue("children", result.children, { shouldValidate: true });
-      
-      const familyName = result.familyName || "Guest";
-      const adults = result.adults !== undefined ? result.adults : "no";
-      const children = result.children !== undefined ? result.children : "no";
-      
-      toast({
-        title: "Guest Info Parsed",
-        description: `${familyName}, ${adults} adult(s), ${children} child(ren) details extracted. Please review and proceed.`,
-      });
-      if((result.adults || 0) + (result.children || 0) > 0) {
-         setCurrentStep(1); // Stay on step 1 to review, or auto-advance if needed
-      }
+  const handleTranscriptProcessing = async (text: string) => {
+    if (!text.trim() || conversationStage === 'done' || conversationStage === 'error') return;
 
+    setIsAiProcessing(true);
+    const inputForAi: ProcessGuestUtteranceInput = {
+      stage: conversationStage as ProcessGuestUtteranceInput['stage'], // Cast because 'done'/'error' are filtered
+      utterance: text,
+      currentFamilyName: guestDataDraft.familyName,
+      currentAdults: guestDataDraft.adults,
+      currentChildren: guestDataDraft.children,
+    };
+
+    try {
+      const result: ProcessGuestUtteranceOutput = await processGuestUtterance(inputForAi);
+      let newDraft = { ...guestDataDraft };
+      let nextStage: ConversationStage = conversationStage;
+      let nextPrompt = result.nextAiPrompt || "Sorry, I'm not sure what to ask next. Please try again or fill manually.";
+
+
+      if (result.parsingError) {
+        toast({ variant: "destructive", title: "AI Parsing Issue", description: result.parsingError });
+        // Keep current stage, AI might provide a re-prompt in nextAiPrompt
+        if(result.nextAiPrompt) setCurrentAiPromptText(result.nextAiPrompt);
+      } else {
+        switch (conversationStage) {
+          case 'familyName':
+            if (result.extractedFamilyName) {
+              newDraft.familyName = result.extractedFamilyName;
+              nextStage = 'adults';
+              setCurrentAiPromptText(result.nextAiPrompt || `How many adults in the ${newDraft.familyName} party?`);
+            } else {
+               setCurrentAiPromptText("I couldn't catch the family name. Could you please repeat it?");
+            }
+            break;
+          case 'adults':
+            if (result.extractedAdults !== undefined) {
+              newDraft.adults = result.extractedAdults;
+              nextStage = 'children';
+              setCurrentAiPromptText(result.nextAiPrompt || `And how many children?`);
+            } else {
+              setCurrentAiPromptText("Sorry, how many adults was that?");
+            }
+            break;
+          case 'children':
+            if (result.extractedChildren !== undefined) {
+              newDraft.children = result.extractedChildren;
+              nextStage = 'confirm';
+              setCurrentAiPromptText(result.nextAiPrompt || `So that's ${newDraft.familyName}, ${newDraft.adults} adults, ${newDraft.children} children. Correct? (Yes/No)`);
+            } else {
+              setCurrentAiPromptText("My apologies, how many children?");
+            }
+            break;
+          case 'confirm':
+            if (result.isConfirmed === true) {
+              nextStage = 'done';
+              form.setValue("familyName", newDraft.familyName || "", { shouldValidate: true });
+              form.setValue("adults", newDraft.adults !== undefined ? newDraft.adults : 0, { shouldValidate: true });
+              form.setValue("children", newDraft.children !== undefined ? newDraft.children : 0, { shouldValidate: true });
+              toast({ title: "Details Confirmed!", description: "Guest details captured. Proceed to meal preferences." });
+              setCurrentAiPromptText(result.nextAiPrompt || "Details confirmed! Please review and proceed to meal preferences below.");
+              setVoiceModeActive(false); // Exit voice mode, show the main form part
+              setCurrentFormStep(1); // Ensure main form part for details is visible before advancing to meals
+            } else if (result.isConfirmed === false) {
+              toast({ title: "Okay, let's restart.", description: "Restarting guest details."});
+              resetConversation(true); // Restart, keep voice mode active
+              // nextStage will be 'familyName' due to resetConversation
+              nextStage = 'familyName'; 
+              newDraft = {}; // Clear draft as we are restarting
+              nextPrompt = "Okay, let's try that again. What is the family name?"; // Override AI prompt for clarity
+            } else {
+              // Unclear confirmation
+              setCurrentAiPromptText(result.nextAiPrompt || "Sorry, I didn't catch that. Is the information correct, yes or no?");
+            }
+            break;
+        }
+        setGuestDataDraft(newDraft);
+        setConversationStage(nextStage);
+        if (nextPrompt && nextStage !== 'done') setCurrentAiPromptText(nextPrompt);
+      }
     } catch (error) {
-      console.error("AI parsing error:", error);
-      setAiError("Failed to parse guest information. Please enter manually.");
+      console.error("AI processing error:", error);
       toast({
         variant: "destructive",
-        title: "AI Parsing Error",
-        description: "Could not understand the guest details from your voice input. Please try again or enter manually.",
+        title: "AI System Error",
+        description: "An error occurred while processing your request with AI. Please try manual entry.",
       });
+      setConversationStage('error');
+      setCurrentAiPromptText("An AI system error occurred. Please use manual form entry.");
+      setVoiceModeActive(false);
     } finally {
       setIsAiProcessing(false);
     }
@@ -199,10 +283,15 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     if (isListening) {
       speechRecognitionRef.current.stop();
     } else {
-      // Reset any previous permission error display before trying again
       setMicPermissionError(false); 
       speechRecognitionRef.current.start();
     }
+  };
+
+  const startVoiceMode = () => {
+    resetConversation();
+    setVoiceModeActive(true);
+    setCurrentFormStep(1); // Ensure we are on the details step
   };
 
 
@@ -216,16 +305,18 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     };
     onAddGuest(guestData);
     form.reset();
-    setCurrentStep(1); 
-    setTranscript("");
-    setAiError(null);
+    setCurrentFormStep(1); 
+    setLastTranscript("");
+    resetConversation(); // Reset AI conversation state
+    setVoiceModeActive(false); // Exit voice mode after successful submission
   }
 
   const adultsCount = form.watch("adults");
   const childrenCount = form.watch("children");
   const totalPeople = (adultsCount || 0) + (childrenCount || 0);
 
-  const handleNextStep = async () => {
+  const handleNextStepToMeals = async () => {
+    // Trigger validation for the first step fields if they were filled manually
     const isValidStep1 = await form.trigger(["familyName", "adults", "children"]);
     
     if (isValidStep1) {
@@ -235,23 +326,27 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
          form.setError("adults", { type: "manual", message: "At least one guest (adult or child) is required." });
          return;
        }
-      setCurrentStep(2);
+      setCurrentFormStep(2);
+      setVoiceModeActive(false); // Ensure voice mode is off when moving to meals
     }
   };
 
-  const handlePrevStep = () => {
-    setCurrentStep(1);
+  const handlePrevStepToDetails = () => {
+    setCurrentFormStep(1);
+    // Optionally, re-activate voice mode if user was in it, or let them choose
+    // setVoiceModeActive(true); 
+    // resetConversation(); // if we want to restart voice on going back
   };
 
   const StepIndicator = () => (
     <div className="mb-4 text-center">
       <p className="text-sm text-muted-foreground">
-        Step {currentStep} of 2: {currentStep === 1 ? "Guest Details" : "Meal Preferences"}
+        Step {currentFormStep} of 2: {currentFormStep === 1 ? "Guest Details" : "Meal Preferences"}
       </p>
       <div className="w-full bg-muted rounded-full h-1.5 mt-1">
         <div
           className="bg-primary h-1.5 rounded-full transition-all duration-300 ease-in-out"
-          style={{ width: `${currentStep * 50}%` }}
+          style={{ width: `${currentFormStep * 50}%` }}
         ></div>
       </div>
     </div>
@@ -261,10 +356,10 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
     <Card className="shadow-lg w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center gap-1">
-          {currentStep === 1 ? <Users className="h-6 w-6 text-primary" /> : <Utensils className="h-6 w-6 text-primary" />}
-          {currentStep === 1 ? "Add Guest Details" : "Set Meal Preferences"}
+          {currentFormStep === 1 ? <Users className="h-6 w-6 text-primary" /> : <Utensils className="h-6 w-6 text-primary" />}
+          {currentFormStep === 1 ? (voiceModeActive ? "Conversational Entry" : "Add Guest Details") : "Set Meal Preferences"}
         </CardTitle>
-         {!isSpeechApiAvailable && currentStep === 1 && (
+         {!isSpeechApiAvailable && currentFormStep === 1 && (
             <Alert variant="default" className="mt-2">
               <MicOff className="h-4 w-4" />
               <AlertTitle>Voice Input Not Available</AlertTitle>
@@ -273,7 +368,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
               </AlertDescription>
             </Alert>
           )}
-          {micPermissionError && currentStep === 1 && (
+          {micPermissionError && currentFormStep === 1 && (
              <Alert variant="destructive" className="mt-2">
                 <MicOff className="h-4 w-4" />
                 <AlertTitle>Microphone Access Denied</AlertTitle>
@@ -285,35 +380,79 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
       </CardHeader>
       <CardContent>
         <StepIndicator />
-        {currentStep === 1 && isSpeechApiAvailable && !micPermissionError && (
-          <div className="mb-4 space-y-2">
+
+        {currentFormStep === 1 && !voiceModeActive && (
+            <Button 
+                type="button" 
+                onClick={startVoiceMode} 
+                variant="outline" 
+                className="w-full mb-4"
+                disabled={!isSpeechApiAvailable || micPermissionError}
+            >
+                <MessageSquare className="mr-2 h-4 w-4" /> Use Conversational AI Entry
+            </Button>
+        )}
+
+        {currentFormStep === 1 && voiceModeActive && conversationStage !== 'done' && conversationStage !== 'error' && (
+          <div className="mb-4 space-y-3 p-3 border rounded-md bg-secondary/20">
+            <div className="text-center">
+                <p className="font-medium text-primary">{currentAiPromptText}</p>
+                {lastTranscript && !isAiProcessing && (
+                    <p className="text-xs text-muted-foreground mt-1">Heard: <span className="italic">"{lastTranscript}"</span></p>
+                )}
+            </div>
             <Button 
               type="button" 
               onClick={toggleListening} 
-              variant="outline" 
-              className="w-full"
-              disabled={isAiProcessing}
+              variant="default" 
+              className="w-full bg-accent hover:bg-accent/80 text-accent-foreground"
+              disabled={isAiProcessing || !isSpeechApiAvailable || micPermissionError}
             >
               {isListening ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mic className="mr-2 h-4 w-4" />}
-              {isListening ? "Listening..." : (transcript ? "Speak Again" : "Use Voice Input")}
+              {isListening ? "Listening..." : (isAiProcessing ? "AI Processing..." : "Speak Response")}
             </Button>
-            {transcript && !isAiProcessing && (
-              <p className="text-sm text-muted-foreground p-2 border rounded-md bg-secondary/20">
-                Heard: <span className="italic">"{transcript}"</span>
-                {isAiProcessing && " Processing..."}
+             {isAiProcessing && (
+               <p className="text-sm text-muted-foreground text-center flex items-center justify-center">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> AI is thinking...
               </p>
             )}
-            {isAiProcessing && (
-               <p className="text-sm text-muted-foreground p-2 border rounded-md bg-secondary/20 flex items-center">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing AI...
-              </p>
-            )}
-            {aiError && <p className="text-sm text-destructive">{aiError}</p>}
+             <Button 
+                type="button" 
+                onClick={() => { setVoiceModeActive(false); resetConversation(); }} 
+                variant="link" 
+                size="sm"
+                className="w-full text-muted-foreground"
+            >
+                Exit Conversational Mode / Enter Manually
+            </Button>
           </div>
         )}
+        
+        {conversationStage === 'error' && currentFormStep === 1 && (
+            <Alert variant="destructive" className="my-4">
+                <MicOff className="h-4 w-4" />
+                <AlertTitle>AI Error</AlertTitle>
+                <AlertDescription>
+                {currentAiPromptText}. Please use the manual form entry below or try conversational entry again later.
+                 <Button onClick={() => {resetConversation(true);}} variant="link" className="p-0 h-auto ml-1 text-destructive hover:underline">Try AI again?</Button>
+                </AlertDescription>
+            </Alert>
+        )}
+         {conversationStage === 'done' && currentFormStep === 1 && (
+             <Alert variant="default" className="my-4 bg-green-50 border-green-200 text-green-700">
+                <Check className="h-4 w-4 text-green-600" />
+                <AlertTitle className="text-green-800">Guest Details Captured!</AlertTitle>
+                <AlertDescription>
+                {currentAiPromptText} The form below is pre-filled. Review and click "Next" for meal preferences.
+                <Button onClick={() => {resetConversation(true);}} variant="link" className="p-0 h-auto ml-1 text-green-700 hover:underline">Re-enter with AI?</Button>
+                </AlertDescription>
+            </Alert>
+        )}
+
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {currentStep === 1 && (
+            {currentFormStep === 1 && !voiceModeActive && (
               <>
                 <FormField
                   control={form.control}
@@ -356,13 +495,65 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     )}
                   />
                 </div>
-                {form.formState.errors.adults && (
+                {form.formState.errors.adults?.message && !form.getFieldState("adults").isDirty && ( // Show general error if adults field isn't specifically touched yet
                     <FormMessage>{form.formState.errors.adults.message}</FormMessage>
                 )}
               </>
             )}
+            
+            {/* Hidden fields if in voice mode but not done, or always visible if not in voice mode */}
+            {currentFormStep === 1 && voiceModeActive && (conversationStage === 'done' || conversationStage === 'error') && (
+                 <>
+                    <p className="text-sm text-muted-foreground my-2">Review or edit the details captured by AI below:</p>
+                    <FormField
+                    control={form.control}
+                    name="familyName"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Family Name</FormLabel>
+                        <FormControl>
+                            <Input placeholder="e.g., Sharma Family" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="adults"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Adults</FormLabel>
+                            <FormControl>
+                            <Input type="number" placeholder="0" {...field} min="0" />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="children"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Children</FormLabel>
+                            <FormControl>
+                            <Input type="number" placeholder="0" {...field} min="0" />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    </div>
+                     {form.formState.errors.adults?.message && !form.getFieldState("adults").isDirty && (
+                        <FormMessage>{form.formState.errors.adults.message}</FormMessage>
+                    )}
+                </>
+            )}
 
-            {currentStep === 2 && (
+
+            {currentFormStep === 2 && (
               <>
                 <div className="space-y-3 border p-3 rounded-md shadow-sm bg-card">
                   <FormDescription>
@@ -482,23 +673,26 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     ))}
                   </div>
                 </div>
+                 {form.formState.errors.mealPreferences?.veg?.message && (
+                    <FormMessage>{form.formState.errors.mealPreferences.veg.message}</FormMessage>
+                )}
               </>
             )}
 
             <div className="flex gap-2 justify-end pt-2">
-              {currentStep === 2 && (
-                <Button type="button" variant="outline" onClick={handlePrevStep}>
+              {currentFormStep === 2 && (
+                <Button type="button" variant="outline" onClick={handlePrevStepToDetails}>
                   <ArrowLeft className="mr-1 h-4 w-4" />
                   Previous
                 </Button>
               )}
-              {currentStep === 1 && (
-                <Button type="button" onClick={handleNextStep} className="bg-primary hover:bg-primary/90">
+              {currentFormStep === 1 && (
+                <Button type="button" onClick={handleNextStepToMeals} className="bg-primary hover:bg-primary/90" disabled={voiceModeActive && conversationStage !== 'done'}>
                   Next
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               )}
-              {currentStep === 2 && (
+              {currentFormStep === 2 && (
                 <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground">
                   <PlusCircle className="mr-1 h-5 w-5" />
                   Add Guest to List
@@ -524,5 +718,3 @@ declare global {
     results: SpeechRecognitionResultList;
   }
 }
-
-    
