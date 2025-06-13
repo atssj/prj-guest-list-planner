@@ -42,26 +42,48 @@ function buildPromptForStage(input: ProcessGuestUtteranceInput): string {
 
   switch (input.stage) {
     case 'familyName':
-      promptSegment += `You asked for the family name or primary guest's name. Extract this name.
-If a name is extracted, suggest the next question: "Got it. How many adults will be in the [Family Name] party?"
-If you cannot determine a name, set parsingError.`;
+      promptSegment += `You asked for the family name or primary guest's name. Your primary goal is to extract this name and populate the 'extractedFamilyName' field.
+If a family name is successfully extracted:
+  - Populate 'extractedFamilyName' with this name.
+  - Suggest the next question for the AI to ask: "Got it. How many adults will be in the {{{extractedFamilyName}}} party?"
+If you CANNOT determine a name from the utterance:
+  - Set 'parsingError' to "I couldn't catch the family name. Could you please repeat it?"
+  - Do not suggest a next question.`;
       break;
     case 'adults':
-      promptSegment += `The family name is "${input.currentFamilyName || 'the family'}". You asked for the number of adults. Extract the number of adults (as an integer).
-If a number is extracted, suggest the next question: "And how many children will be with them?"
-If you cannot determine the number of adults, set parsingError. Assume 0 if they explicitly say "zero" or "none".`;
+      promptSegment += `The family name is "${input.currentFamilyName || 'the family'}". You asked for the number of adults. Your primary goal is to extract the number of adults as an integer and populate the 'extractedAdults' field.
+If a number for adults is successfully extracted:
+  - Populate 'extractedAdults' with this number.
+  - Suggest the next question for the AI to ask: "And how many children will be with them?"
+If you CANNOT determine the number of adults from the utterance:
+  - Set 'parsingError' to "I couldn't understand the number of adults. Could you please repeat how many adults?"
+  - Do NOT attempt to extract or re-extract the family name at this stage.
+  - Do not suggest a next question.
+Assume 0 for adults if the user explicitly says "zero" or "none".`;
       break;
     case 'children':
-      promptSegment += `The family name is "${input.currentFamilyName || 'the family'}" and there are ${input.currentAdults || 0} adults. You asked for the number of children. Extract the number of children (as an integer).
-If a number is extracted, suggest the next question: "Great! So, just to confirm: [Family Name], ${input.currentAdults || 0} adult(s), and [extracted children] child(ren). Is that correct? (Please say Yes or No)"
-If you cannot determine the number of children, set parsingError. Assume 0 if they explicitly say "zero" or "none".`;
+      promptSegment += `The family name is "${input.currentFamilyName || 'the family'}" and there are ${input.currentAdults || 0} adults. You asked for the number of children. Your primary goal is to extract the number of children as an integer and populate the 'extractedChildren' field.
+If a number for children is successfully extracted:
+  - Populate 'extractedChildren' with this number.
+  - Suggest the next question for the AI to ask: "Great! So, just to confirm: ${input.currentFamilyName || 'The family'}, ${input.currentAdults || 0} adult(s), and {{{extractedChildren}}} child(ren). Is that correct? (Please say Yes or No)"
+If you CANNOT determine the number of children from the utterance:
+  - Set 'parsingError' to "I couldn't understand the number of children. Could you please repeat how many children?"
+  - Do NOT attempt to extract or re-extract other details at this stage.
+  - Do not suggest a next question.
+Assume 0 for children if the user explicitly says "zero" or "none".`;
       break;
     case 'confirm':
-      promptSegment += `You presented the summary: "${input.currentFamilyName || 'Unknown family'}", ${input.currentAdults || 0} adult(s), and ${input.currentChildren || 0} child(ren). You asked for confirmation (Yes/No).
-Determine if the user's response means "Yes" (confirm) or "No" (deny). Set isConfirmed accordingly.
-If "Yes", suggest the next prompt: "Excellent! I've noted that down. You can now review meal preferences or add another guest."
-If "No", suggest the next prompt: "Okay, let's try that again. What is the family name?" (This will restart the process)
-If the response is unclear for confirmation, set parsingError and suggest: "Sorry, I didn't catch that. Is the information correct, yes or no?"`;
+      promptSegment += `You presented the summary: "${input.currentFamilyName || 'Unknown family'}", ${input.currentAdults || 0} adult(s), and ${input.currentChildren || 0} child(ren). You asked for confirmation (Yes/No). Your primary goal is to determine if the user's response means "Yes" (confirm) or "No" (deny) and populate the 'isConfirmed' field.
+If the user confirms ("Yes"):
+  - Set 'isConfirmed' to true.
+  - Suggest the next prompt for the AI to ask: "Excellent! I've noted that down. You can now review meal preferences or add another guest."
+If the user denies ("No"):
+  - Set 'isConfirmed' to false.
+  - Suggest the next prompt for the AI to ask: "Okay, let's try that again. What is the family name?"
+If the user's response is unclear for confirmation (neither a clear "Yes" nor "No"):
+  - Set 'parsingError' to "Sorry, I didn't quite catch that. Is the information correct, yes or no?"
+  - Do not set 'isConfirmed'.
+  - Do not suggest a next question, the client will re-prompt.`;
       break;
   }
   return promptSegment;
@@ -78,23 +100,41 @@ const processGuestUtteranceFlow = ai.defineFlow(
 
     const prompt = ai.definePrompt({
         name: 'processGuestUtterancePrompt', // Each call makes a new prompt object, could be optimized if needed
-        input: { schema: ProcessGuestUtteranceInputSchema },
+        input: { schema: ProcessGuestUtteranceInputSchema }, // This defines the overall input structure available to the handlebars template
         output: { schema: ProcessGuestUtteranceOutputSchema },
-        prompt: dynamicPromptContent, 
+        prompt: dynamicPromptContent,
     });
 
-    const {output} = await prompt(input); // Pass the original input, Handlebars will use it
+    const {output} = await prompt(input); // Pass the original input, Handlebars will use its fields
     
-    // Ensure numbers are indeed numbers if extracted
-    if (output?.extractedAdults !== undefined && isNaN(Number(output.extractedAdults))) {
-        output.parsingError = `Expected a number for adults, but couldn't parse one from "${input.utterance}".`;
-        output.extractedAdults = undefined;
-    }
-    if (output?.extractedChildren !== undefined && isNaN(Number(output.extractedChildren))) {
-        output.parsingError = `Expected a number for children, but couldn't parse one from "${input.utterance}".`;
-        output.extractedChildren = undefined;
+    // Ensure numbers are indeed numbers if extracted, and clear parsingError if they are valid.
+    // The AI might set parsingError and still return a number sometimes.
+    if (output) {
+        if (output.extractedAdults !== undefined) {
+            if (isNaN(Number(output.extractedAdults))) {
+                output.parsingError = output.parsingError || `Expected a number for adults, but couldn't parse one from "${input.utterance}".`;
+                output.extractedAdults = undefined;
+            } else {
+                 // If adults were successfully parsed as a number, and the AI also set a parsingError for adults, let's clear it.
+                 if (input.stage === 'adults' && output.parsingError && output.parsingError.toLowerCase().includes('adults')) {
+                    output.parsingError = undefined;
+                 }
+            }
+        }
+        if (output.extractedChildren !== undefined) {
+             if (isNaN(Number(output.extractedChildren))) {
+                output.parsingError = output.parsingError || `Expected a number for children, but couldn't parse one from "${input.utterance}".`;
+                output.extractedChildren = undefined;
+            } else {
+                // If children were successfully parsed as a number, and the AI also set a parsingError for children, let's clear it.
+                if (input.stage === 'children' && output.parsingError && output.parsingError.toLowerCase().includes('children')) {
+                   output.parsingError = undefined;
+                }
+            }
+        }
     }
     
     return output!;
   }
 );
+
