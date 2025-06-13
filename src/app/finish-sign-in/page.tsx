@@ -1,75 +1,64 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
-import { isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { MailCheck, AlertTriangle, Home } from 'lucide-react';
-
-const EMAIL_FOR_SIGN_IN_KEY = 'emailForSignIn';
 
 export default function FinishSignInPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'idle'>('idle');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const processSignIn = async () => {
-      if (isSignInWithEmailLink(auth, window.location.href)) {
-        setStatus('loading');
-        let email = window.localStorage.getItem(EMAIL_FOR_SIGN_IN_KEY);
-        if (!email) {
-          // User opened the link on a different device or browser.
-          // Prompt user for email.
-          // For simplicity in this iteration, we'll show an error.
-          // A more robust solution would involve a form to re-enter email.
-          setErrorMessage("Your email is required to complete sign-in. Please try sending the link again from the original device/browser or ensure cookies/localStorage are enabled.");
-          setStatus('error');
-          toast({
-            variant: "destructive",
-            title: "Sign-In Incomplete",
-            description: "Email not found. Please try initiating the sign-in process again.",
-          });
-          return;
-        }
-
-        try {
-          await signInWithEmailLink(auth, email, window.location.href);
-          window.localStorage.removeItem(EMAIL_FOR_SIGN_IN_KEY);
-          setStatus('success');
-          toast({
-            title: "Sign-In Successful!",
-            description: "You are now signed in.",
-          });
-          // Redirect to profile or a desired page
-          router.push('/profile'); 
-        } catch (error: any) {
-          console.error("Error signing in with email link:", error);
-          let friendlyMessage = "An error occurred during sign-in. Please try again.";
-          if (error.code === 'auth/invalid-action-code') {
-            friendlyMessage = "The sign-in link is invalid or has expired. Please request a new one.";
-          } else if (error.code === 'auth/user-disabled') {
-            friendlyMessage = "This account has been disabled.";
+      if (typeof window !== 'undefined') {
+        if (isSignInWithEmailLink(auth, window.location.href)) {
+          setStatus('loading');
+          let email = window.localStorage.getItem(EMAIL_FOR_SIGN_IN_KEY);
+          if (!email) {
+            // User opened the link on a different device or browser.
+            // Prompt user for email.
+            // For simplicity in this iteration, we'll show an error.
+            // A more robust solution would involve a form to re-enter email.
+            setErrorMessage("Your email is required to complete sign-in. Please try sending the link again from the original device/browser or ensure cookies/localStorage are enabled.");
+            setStatus('error');
+            toast({
+              variant: "destructive",
+              title: "Sign-In Incomplete",
+              description: "Email not found. Please try initiating the sign-in process again.",
+            });
+            return;
           }
-          setErrorMessage(friendlyMessage);
-          setStatus('error');
-          toast({
-            variant: "destructive",
-            title: "Sign-In Failed",
-            description: friendlyMessage,
-          });
+
+          try {
+            await signInWithEmailLink(auth, email, window.location.href);
+            window.localStorage.removeItem(EMAIL_FOR_SIGN_IN_KEY);
+            setStatus('success');
+            toast({
+              title: "Sign-In Successful!",
+              description: "You are now signed in.",
+            });
+            // Redirect to profile or a desired page
+            router.push('/profile'); 
+          } catch (error: any) {
+            console.error("Error signing in with email link:", error);
+            let friendlyMessage = "An error occurred during sign-in. Please try again.";
+            if (error.code === 'auth/invalid-action-code') {
+              friendlyMessage = "The sign-in link is invalid or has expired. Please request a new one.";
+            } else if (error.code === 'auth/user-disabled') {
+              friendlyMessage = "This account has been disabled.";
+            }
+            setErrorMessage(friendlyMessage);
+            setStatus('error');
+            toast({
+              variant: "destructive",
+              title: "Sign-In Failed",
+              description: friendlyMessage,
+            });
+          }
+        } else {
+          // Not a sign-in link, or link already used.
+          // For robustness, you might want to redirect or show a specific message.
+          // For now, we'll just let it be idle or redirect to home.
+          // setStatus('idle');
+          // router.push('/'); 
         }
-      } else {
-        // Not a sign-in link, or link already used.
-        // For robustness, you might want to redirect or show a specific message.
-        // For now, we'll just let it be idle or redirect to home.
-        // setStatus('idle');
-        // router.push('/'); 
       }
     };
 
