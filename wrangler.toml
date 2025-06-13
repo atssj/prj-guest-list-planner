@@ -1,7 +1,0 @@
-name = "invitelist"
-compatibility_date = "2023-12-01"
-
-[pages_build_output]
-dir = ".next"
-
-# Add any environment variables specific to your production environment here
