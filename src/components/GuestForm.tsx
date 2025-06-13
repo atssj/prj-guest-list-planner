@@ -92,7 +92,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
         const recognition = new SpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;
-        recognition.lang = 'en-IN'; // Changed to Indian English
+        recognition.lang = 'bn-IN'; // Changed to Bengali (India)
 
         recognition.onstart = () => {
           setIsListening(true);
