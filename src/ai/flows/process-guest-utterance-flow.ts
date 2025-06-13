@@ -11,7 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const ProcessGuestUtteranceInputSchema = z.object({
+const ProcessGuestUtteranceInputSchema = z.object({
   stage: z.enum(['familyName', 'adults', 'children', 'confirm'])
     .describe("The current stage of the conversation, determining what information is being asked for."),
   utterance: z.string().describe("The user's spoken response (transcript)."),
@@ -21,7 +21,7 @@ export const ProcessGuestUtteranceInputSchema = z.object({
 });
 export type ProcessGuestUtteranceInput = z.infer<typeof ProcessGuestUtteranceInputSchema>;
 
-export const ProcessGuestUtteranceOutputSchema = z.object({
+const ProcessGuestUtteranceOutputSchema = z.object({
   extractedFamilyName: z.string().optional().describe("The family name extracted from this utterance, if the stage was 'familyName'."),
   extractedAdults: z.number().int().min(0).optional().describe("Number of adults extracted, if the stage was 'adults'."),
   extractedChildren: z.number().int().min(0).optional().describe("Number of children extracted, if the stage was 'children'."),
