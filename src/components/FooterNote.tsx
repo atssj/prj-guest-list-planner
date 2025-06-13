@@ -5,7 +5,7 @@ const FooterNote: React.FC = () => {
 
   return (
     <p className="text-center text-sm text-muted-foreground py-4">
-      © {currentYear} Guest List Planner. All rights reserved.
+      © {currentYear} Guest Invite List. All rights reserved.
     </p>
   );
 };

@@ -20,7 +20,7 @@ export default function HomePage() {
           <Sparkles className="h-12 w-12 text-primary" />
         </div>
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-headline text-primary">
-          Guest List Planner
+          Guest Invite List
         </h1>
         <p className="text-lg sm:text-xl text-foreground/80 leading-relaxed">
           Your Partner in Perfect Guest Management.

@@ -6,9 +6,9 @@ import { BottomNavbar } from '@/components/BottomNavbar';
 import FooterNote from '@/components/FooterNote';
 
 export const metadata: Metadata = {
-  title: 'Guest List Planner - Effortless Event Guest Management',
-  description: 'Effortlessly manage your guest lists with Guest List Planner. Add guests, track preferences, and get summaries for parties, gatherings, and any event.',
-  keywords: 'guest list planner, guest management, event planning, party planning, rsvp tracking, invitation management',
+  title: 'Guest Invite List - Effortless Event Guest Management',
+  description: 'Effortlessly manage your guest lists with Guest Invite List. Add guests, track preferences, and get summaries for parties, gatherings, and any event.',
+  keywords: 'guest invite list, guest management, event planning, party planning, rsvp tracking, invitation management',
 };
 
 export default function RootLayout({
