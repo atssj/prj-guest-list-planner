@@ -18,8 +18,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Guest, OtherMealPreference } from "@/lib/types";
 import { AuthDialog } from "@/components/AuthDialog";
-import { auth, db } from "../lib/firebase"; // Added db
-import { useToast } from "../hooks/use-toast"; // Added import
+import { auth, db } from "@/lib/firebase"; // Changed path
+import { useToast } from "@/hooks/use-toast"; // Changed path
 import { doc, setDoc } from "firebase/firestore"; // Added firestore functions
 import { onAuthStateChanged } from "firebase/auth"; // Added onAuthStateChanged
 
