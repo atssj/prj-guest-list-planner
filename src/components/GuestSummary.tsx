@@ -154,7 +154,8 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
         <CardFooter className="mt-auto pt-6 print-hide">
           <div className="flex w-full gap-2 justify-between items-center">
             <Button 
-              variant="outline" 
+              variant="outline"
+              size="sm" // Reduced button size
               onClick={onSaveListClick} 
               className="flex-grow shadow-sm"
               disabled={isSaveDisabled}
@@ -166,6 +167,7 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
             <div className="flex rounded-md shadow-sm">
               <Button
                 variant="default"
+                size="sm" // Match size for visual consistency if desired, or keep default
                 onClick={handleShare}
                 className="rounded-r-none border-r border-primary-foreground/20" 
                 disabled={isSaveDisabled || !isShareApiAvailable}
@@ -178,6 +180,7 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="default"
+                    size="sm" // Match size for visual consistency
                     className="px-2 rounded-l-none"
                     disabled={isSaveDisabled}
                     aria-label="More options for printing"
@@ -205,3 +208,4 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
     </Card>
   );
 }
+
