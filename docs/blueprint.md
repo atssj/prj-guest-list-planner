@@ -1,4 +1,8 @@
-# **App Name**: Shaadi Planner
+# **App Name**: Guest List Manager
+
+## Application Summary:
+
+The Guest List Manager is an application designed to help users manage their guest lists efficiently. It allows users to enter guest information by family, including the number of adults and children, and specify food preferences from a predefined list. A key feature is the real-time guest summary generated with the assistance of generative AI, providing an up-to-date overview of total guests, adult and child counts, and food preference breakdowns. The application's design incorporates Indian cultural elements through color choices, typography, and the potential use of traditional motifs, aiming to provide a culturally relevant and aesthetically pleasing user experience.
 
 ## Core Features:
 
