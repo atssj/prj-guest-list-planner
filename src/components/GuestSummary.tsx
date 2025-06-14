@@ -155,9 +155,9 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
           <div className="flex w-full gap-2 justify-between items-center">
             <Button 
               variant="outline"
-              size="sm" // Reduced button size
+              size="sm"
               onClick={onSaveListClick} 
-              className="flex-grow shadow-sm"
+              className="w-1/4 shadow-sm"
               disabled={isSaveDisabled}
             >
               <Save className="mr-2 h-4 w-4" />
@@ -167,7 +167,7 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
             <div className="flex rounded-md shadow-sm">
               <Button
                 variant="default"
-                size="sm" // Match size for visual consistency if desired, or keep default
+                size="sm" 
                 onClick={handleShare}
                 className="rounded-r-none border-r border-primary-foreground/20" 
                 disabled={isSaveDisabled || !isShareApiAvailable}
@@ -180,10 +180,10 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="default"
-                    size="sm" // Match size for visual consistency
+                    size="sm" 
                     className="px-2 rounded-l-none"
                     disabled={isSaveDisabled}
-                    aria-label="More options for printing"
+                    aria-label="More options for printing or sharing"
                   >
                     <ChevronDown className="h-4 w-4" />
                   </Button>
@@ -208,4 +208,3 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
     </Card>
   );
 }
-
