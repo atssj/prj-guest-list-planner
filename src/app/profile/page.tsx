@@ -92,7 +92,7 @@ export default function ProfilePage() {
         <header className="mb-6 md:mb-8">
           <div className="flex items-center">
             <Link href="/add-guest" passHref>
-              <Button variant="outline" size="icon" aria-label="Back to planner">
+              <Button variant="default" size="icon" aria-label="Back to planner">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
