@@ -30,7 +30,7 @@ export default function ProfilePage() {
           setUser(userCredential.user);
           toast({
             title: "Browsing as Guest",
-            description: "You are currently signed in anonymously.",
+            description: "You're currently exploring as a guest. Your lists are saved on this device.",
           });
         } catch (error: any) {
           console.error("Error signing in anonymously:", error);
@@ -116,8 +116,8 @@ export default function ProfilePage() {
                 <>
                   {user.isAnonymous ? (
                     <CardDescription className="mb-4 text-center">
-                      You are currently browsing as a guest. Your data is stored locally.
-                      Sign in with email to save your lists permanently.
+                      You're currently using the app as a guest. Your guest lists are saved only on this device.
+                      To keep your lists safe and access them from anywhere, please sign in or create an account.
                     </CardDescription>
                   ) : (
                     <p className="text-muted-foreground mb-4">
@@ -128,7 +128,7 @@ export default function ProfilePage() {
                   <div className="space-y-3">
                     <div className="p-3 border rounded-md bg-secondary/20">
                       <p className="text-sm font-medium">Email</p>
-                      <p className="text-lg">{user.isAnonymous ? "N/A (Guest User)" : user.email}</p>
+                      <p className="text-lg">{user.isAnonymous ? "Browsing as Guest" : user.email}</p>
                     </div>
                     {user.metadata.creationTime && !user.isAnonymous && (
                       <div className="p-3 border rounded-md bg-secondary/20">
@@ -139,7 +139,7 @@ export default function ProfilePage() {
                      <div className="p-3 border rounded-md bg-secondary/20">
                       <p className="text-sm font-medium">Account Status</p>
                       <p className="text-lg">
-                        {user.isAnonymous ? "Anonymous Guest" : (user.emailVerified ? "Email Verified" : "Email Not Verified")}
+                        {user.isAnonymous ? "Guest" : (user.emailVerified ? "Email Verified" : "Email Not Verified")}
                       </p>
                     </div>
                   </div>
@@ -147,7 +147,7 @@ export default function ProfilePage() {
                   {user.isAnonymous ? (
                     <Button onClick={() => setIsAuthDialogOpen(true)} className="w-full mt-6 bg-accent hover:bg-accent/90 text-accent-foreground">
                       <LogIn className="mr-2 h-4 w-4" />
-                      Log In / Sign Up with Email Link
+                      Log In / Sign Up with Email
                     </Button>
                   ) : (
                     // Show Log Out button only for non-anonymous (email signed-in) users
@@ -165,7 +165,7 @@ export default function ProfilePage() {
                   </CardDescription>
                   <Button onClick={() => setIsAuthDialogOpen(true)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                     <LogIn className="mr-2 h-4 w-4" />
-                    Log In / Sign Up with Email Link
+                    Log In / Sign Up with Email
                   </Button>
                 </>
               )}
