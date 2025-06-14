@@ -116,8 +116,8 @@ export default function ProfilePage() {
                 <>
                   {user.isAnonymous ? (
                     <CardDescription className="mb-4 text-center">
-                      You're currently using the app as a guest. Your guest lists are saved only on this device.
-                      To keep your lists safe and access them from anywhere, please sign in or create an account.
+                      You're currently exploring as a guest. Your lists are saved on this device for now.
+                      To keep them safe and access them from anywhere, please sign in or create an account!
                     </CardDescription>
                   ) : (
                     <p className="text-muted-foreground mb-4">
@@ -128,7 +128,7 @@ export default function ProfilePage() {
                   <div className="space-y-3">
                     <div className="p-3 border rounded-md bg-secondary/20">
                       <p className="text-sm font-medium">Email</p>
-                      <p className="text-lg">{user.isAnonymous ? "Browsing as Guest" : user.email}</p>
+                      <p className="text-lg">{user.isAnonymous ? "Not signed in (Guest)" : user.email}</p>
                     </div>
                     {user.metadata.creationTime && !user.isAnonymous && (
                       <div className="p-3 border rounded-md bg-secondary/20">
@@ -139,7 +139,7 @@ export default function ProfilePage() {
                      <div className="p-3 border rounded-md bg-secondary/20">
                       <p className="text-sm font-medium">Account Status</p>
                       <p className="text-lg">
-                        {user.isAnonymous ? "Guest" : (user.emailVerified ? "Email Verified" : "Email Not Verified")}
+                        {user.isAnonymous ? "Guest Session" : (user.emailVerified ? "Email Verified" : "Email Not Verified")}
                       </p>
                     </div>
                   </div>
