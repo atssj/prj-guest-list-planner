@@ -108,7 +108,7 @@ export default function AddGuestPage() {
                 <PlusCircle className="mr-2 h-5 w-5" /> Add Another Guest
               </Button>
               <Button onClick={handleFinishAndRedirect} variant="outline" className="w-full sm:w-auto">
-                <ListChecks className="mr-2 h-5 w-5" /> Finish & View Summary
+                <ListChecks className="mr-2 h-5 w-5" /> See My Guest List Summary
               </Button>
             </CardContent>
           </Card>

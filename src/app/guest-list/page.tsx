@@ -68,7 +68,7 @@ export default function GuestListPage() {
             </Button>
           </Link>
           <h1 className="text-2xl sm:text-3xl font-headline text-primary text-center flex-grow px-4">
-            Guest List Preview
+            Your Current Guest List
           </h1>
           {guests.length > 0 && (
             <Button 
@@ -94,7 +94,7 @@ export default function GuestListPage() {
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-muted-foreground mb-4">
-                Your guest list is currently empty. Go back to the planner to add some guests!
+                Your guest list is looking a bit empty. Start adding guests to see them here!
               </p>
               <div className="flex flex-col sm:flex-row justify-center items-center gap-2 mt-4">
                 <Button
@@ -124,16 +124,16 @@ export default function GuestListPage() {
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <Table>
-                <TableCaption>A detailed overview of your guest list.</TableCaption>
+                <TableCaption>Here's everyone you've added so far.</TableCaption>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="min-w-[150px]">Family Name</TableHead>
                     <TableHead className="text-center">Adults</TableHead>
                     <TableHead className="text-center">Children</TableHead>
-                    <TableHead className="text-center"><Salad className="inline h-4 w-4 mr-1"/>Veg</TableHead>
+                    <TableHead className="text-center"><Salad className="inline h-4 w-4 mr-1"/>Vegetarian</TableHead>
                     <TableHead className="text-center"><Beef className="inline h-4 w-4 mr-1"/>Non-Veg</TableHead>
-                    <TableHead className="text-center"><Grape className="inline h-4 w-4 mr-1"/>Child Meal</TableHead>
-                    <TableHead className="min-w-[200px]"><Wheat className="inline h-4 w-4 mr-1"/>Other Meals</TableHead>
+                    <TableHead className="text-center"><Grape className="inline h-4 w-4 mr-1"/>Kid's Meal</TableHead>
+                    <TableHead className="min-w-[200px]"><Wheat className="inline h-4 w-4 mr-1"/>Special Meals</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

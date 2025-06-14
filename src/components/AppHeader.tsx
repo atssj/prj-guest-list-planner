@@ -18,7 +18,7 @@ export function AppHeader({ onSaveListClick, onViewListClick }: AppHeaderProps) 
         </h1>
       </div>
       <p className="text-sm sm:text-md md:text-lg text-muted-foreground mb-4">
-        Effortlessly manage your guest lists for any occasion.
+        Easily manage your guest lists for any event.
       </p>
     </header>
   );

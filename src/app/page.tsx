@@ -23,18 +23,15 @@ export default function HomePage() {
           Guest Invite List
         </h1>
         <p className="text-lg sm:text-xl text-foreground/80 leading-relaxed">
-          Your Partner in Perfect Guest Management.
-          <br />
-          Seamlessly organize your guest lists for any event.
+          Your friendly helper for easy guest list organization. <br /> Plan any event without the fuss.
         </p>
         <p className="text-md text-muted-foreground">
-          Add guest names, specify counts, note preferences, and watch your list grow.
-          Perfect for parties, gatherings, and any occasion.
+          Easily add guest names, how many are coming, their meal choices, and see your list come together. Perfect for parties, get-togethers, and all your special events.
         </p>
         <div className="mt-8">
           <Link href="/add-guest" passHref>
             <Button size="lg" className="text-lg py-6 px-8 bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg transform hover:scale-105 transition-transform duration-200">
-              Create Guest Invite List
+              Start Your Guest List
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
