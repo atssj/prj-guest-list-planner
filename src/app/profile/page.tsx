@@ -53,15 +53,13 @@ export default function ProfilePage() {
   }, []); // toast is stable, auth is stable
 
   const handleLogout = async () => {
-    const isAnonymousUser = user?.isAnonymous;
+    // This function will now only be called by non-anonymous users
     try {
       await signOut(auth);
-      // User state will be updated by onAuthStateChanged, which will trigger anonymous sign-in again if no other user logs in.
+      // User state will be updated by onAuthStateChanged, which will trigger anonymous sign-in again.
       toast({
-        title: isAnonymousUser ? "Guest Session Ended" : "Logged Out",
-        description: isAnonymousUser 
-          ? "You have signed out of your guest session. A new one will start if needed." 
-          : "You have been successfully logged out.",
+        title: "Logged Out",
+        description: "You have been successfully logged out. You are now browsing as a guest.",
       });
     } catch (error) {
       console.error("Error logging out:", error);
@@ -146,17 +144,18 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   
-                  {user.isAnonymous && (
+                  {user.isAnonymous ? (
                     <Button onClick={() => setIsAuthDialogOpen(true)} className="w-full mt-6 bg-accent hover:bg-accent/90 text-accent-foreground">
                       <LogIn className="mr-2 h-4 w-4" />
                       Log In / Sign Up with Email Link
                     </Button>
+                  ) : (
+                    // Show Log Out button only for non-anonymous (email signed-in) users
+                    <Button onClick={handleLogout} variant="outline" className="w-full mt-6">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log Out
+                    </Button>
                   )}
-
-                  <Button onClick={handleLogout} variant="outline" className="w-full mt-3">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    {user.isAnonymous ? "End Guest Session" : "Log Out"}
-                  </Button>
                 </>
               ) : (
                 // This block should ideally not be reached if anonymous sign-in always works or error is handled
