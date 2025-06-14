@@ -152,7 +152,7 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
       </CardContent>
       {onSaveListClick && (
         <CardFooter className="mt-auto pt-6 print-hide">
-          <div className="flex w-full gap-2 justify-between items-center">
+          <div className="flex w-full gap-2 justify-start items-center"> {/* Changed justify-between to justify-start */}
             <Button 
               variant="outline"
               size="sm"
