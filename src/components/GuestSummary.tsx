@@ -90,9 +90,9 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
           <div>
             <CardTitle className="font-headline text-2xl flex items-center gap-2">
               <ListChecks className="h-6 w-6 text-primary" />
-              Guest Summary
+              Event Snapshot
             </CardTitle>
-            <CardDescription>Real-time overview of your guest list.</CardDescription>
+            <CardDescription>A quick look at your guest numbers and meal choices.</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -126,7 +126,7 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
         <div className="print-meal-counts">
           <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 font-headline text-primary">
             <UtensilsCrossed className="h-5 w-5" />
-            Meal Counts Breakdown
+            Meal Choices Summary
           </h3>
           <div className="space-y-2">
             <div className="flex justify-between items-center p-2 border-b">
@@ -146,14 +146,14 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
             <div className="flex justify-between items-center p-2 border-b">
               <div className="flex items-center gap-2">
                 <Grape className="h-5 w-5 text-purple-600" /> 
-                <span>Child Meals</span>
+                <span>Kid's Meals</span>
               </div>
               <span className="font-medium">{summary.mealCounts.childMeal}</span>
             </div>
             <div className="flex justify-between items-center p-2 border-b last:border-b-0">
               <div className="flex items-center gap-2">
                 <Wheat className="h-5 w-5 text-yellow-600" />
-                <span>Other Meals</span>
+                <span>Special Meals</span>
               </div>
               <span className="font-medium">{summary.mealCounts.other}</span>
             </div>

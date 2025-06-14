@@ -26,21 +26,21 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 const otherMealPreferenceSchema = z.object({
-  name: z.string().min(1, "Meal name is required."),
-  count: z.coerce.number().min(1, "Count must be at least 1.").int("Must be a whole number."),
+  name: z.string().min(1, "Please enter the name for this special meal."),
+  count: z.coerce.number().min(1, "Please enter a count of at least 1 for this meal.").int("Count must be a whole number."),
 });
 
 const mealPreferencesSchema = z.object({
-  veg: z.coerce.number().min(0, "Cannot be negative").int("Must be a whole number"),
-  nonVeg: z.coerce.number().min(0, "Cannot be negative").int("Must be a whole number"),
-  childMeal: z.coerce.number().min(0, "Cannot be negative").int("Must be a whole number"),
+  veg: z.coerce.number().min(0, "Number of meals cannot be negative.").int("Number of vegetarian meals must be a whole number."),
+  nonVeg: z.coerce.number().min(0, "Number of meals cannot be negative.").int("Number of non-vegetarian meals must be a whole number."),
+  childMeal: z.coerce.number().min(0, "Number of meals cannot be negative.").int("Number of kid's meals must be a whole number."),
   otherMeals: z.array(otherMealPreferenceSchema).optional(),
 });
 
 const guestFormSchema = z.object({
-  familyName: z.string().min(1, "Family name is required."),
-  adults: z.coerce.number().min(0, "Number of adults must be 0 or more.").int(),
-  children: z.coerce.number().min(0, "Number of children must be 0 or more.").int(),
+  familyName: z.string().min(1, "Please enter the guest or family name."),
+  adults: z.coerce.number().min(0, "Number of adults must be 0 or more.").int("Number of adults must be a whole number."),
+  children: z.coerce.number().min(0, "Number of children must be 0 or more.").int("Number of children must be a whole number."),
   mealPreferences: mealPreferencesSchema,
 })
 .refine((data) => data.adults + data.children > 0, {
@@ -143,7 +143,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
   const StepIndicator = () => (
     <div className="mb-4 text-center">
       <p className="text-sm text-muted-foreground">
-        Step {currentFormStep} of 2: {currentFormStep === 1 ? "Guest Details" : "Meal Preferences"}
+        Step {currentFormStep} of 2: {currentFormStep === 1 ? "Guest Information" : "Meal Choices"}
       </p>
       <div className="w-full bg-muted rounded-full h-1.5 mt-1">
         <div
@@ -159,7 +159,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center gap-1">
           {currentFormStep === 1 ? <Users className="h-6 w-6 text-primary" /> : <Utensils className="h-6 w-6 text-primary" />}
-          {currentFormStep === 1 ? "Add Guest Details" : "Set Meal Preferences"}
+          {currentFormStep === 1 ? "Add Guest Information" : "Select Meal Choices"}
         </CardTitle>
         {/* Removed AI-related alerts and buttons from header */}
       </CardHeader>
@@ -177,7 +177,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                   name="familyName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Family Name</FormLabel>
+                      <FormLabel>Guest or Family Name</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g., Sharma Family" {...field} />
                       </FormControl>
@@ -191,7 +191,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     name="adults"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Adults</FormLabel>
+                        <FormLabel>Number of Adults</FormLabel>
                         <FormControl>
                           <Input type="number" placeholder="0" {...field} min="0" />
                         </FormControl>
@@ -204,7 +204,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     name="children"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Children</FormLabel>
+                        <FormLabel>Number of Children</FormLabel>
                         <FormControl>
                           <Input type="number" placeholder="0" {...field} min="0" />
                         </FormControl>
@@ -232,7 +232,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel className="flex items-center gap-1"><Salad className="h-4 w-4 text-green-600"/>Vegetarian</FormLabel>
+                          <FormLabel className="flex items-center gap-1"><Salad className="h-4 w-4 text-green-600"/>Vegetarian Meals</FormLabel>
                           <FormControl>
                             <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
                           </FormControl>
@@ -248,7 +248,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel className="flex items-center gap-1"><Beef className="h-4 w-4 text-red-600"/>Non-Vegetarian</FormLabel>
+                          <FormLabel className="flex items-center gap-1"><Beef className="h-4 w-4 text-red-600"/>Non-Vegetarian Meals</FormLabel>
                           <FormControl>
                             <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
                           </FormControl>
@@ -264,7 +264,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel className="flex items-center gap-1"><Grape className="h-4 w-4 text-purple-600"/>Child Meal</FormLabel>
+                          <FormLabel className="flex items-center gap-1"><Grape className="h-4 w-4 text-purple-600"/>Kid's Meals</FormLabel>
                           <FormControl>
                             <Input type="number" placeholder="0" {...field} min="0" className="w-20 text-center" />
                           </FormControl>
@@ -275,7 +275,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                   />
                   
                   <div className="space-y-2">
-                    <FormLabel className="flex items-center gap-1"><Wheat className="h-4 w-4 text-yellow-600"/>Other Meal(s)</FormLabel>
+                    <FormLabel className="flex items-center gap-1"><Wheat className="h-4 w-4 text-yellow-600"/>Special Meal Requests</FormLabel>
                     {fields.map((item, index) => (
                       <div key={item.id} className="p-2 border rounded-md bg-background/50 shadow-inner">
                         <div className="grid grid-cols-10 gap-2 items-start">
@@ -286,7 +286,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
                               <FormItem className="col-span-7"> 
                                 <FormLabel className="sr-only">Other Meal Name {index + 1}</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Meal Name" {...field} />
+                                  <Input placeholder="e.g., Gluten-Free, Vegan" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -361,7 +361,7 @@ export function GuestForm({ onAddGuest }: GuestFormProps) {
               {currentFormStep === 2 && (
                 <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground">
                   <PlusCircle className="mr-1 h-5 w-5" />
-                  Add Guest to List
+                  Add This Guest
                 </Button>
               )}
             </div>

@@ -87,7 +87,7 @@ export default function SummaryPage() {
             </Button>
           </Link>
           <h1 className="text-2xl sm:text-3xl font-headline text-primary text-center flex-grow px-4">
-            Guest Summary
+            Your Event Snapshot
           </h1>
            <div className="w-10 h-10"></div> 
         </div>
