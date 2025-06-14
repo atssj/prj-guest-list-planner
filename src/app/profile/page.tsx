@@ -89,7 +89,7 @@ export default function ProfilePage() {
         <header className="mb-6 md:mb-8">
           <div className="flex items-center">
             <Link href="/add-guest" passHref>
-              <Button variant="accent" size="icon" aria-label="Back to planner">
+              <Button variant="outline" size="icon" aria-label="Back to planner">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
@@ -113,8 +113,8 @@ export default function ProfilePage() {
                 <>
                   {user.isAnonymous ? (
                     <CardDescription className="mb-4 text-center">
-                      You're currently exploring as a guest. Your lists are saved on this device for now.
-                      To keep your lists safe and use them on other devices, please Log In or Sign Up!
+                      You&apos;re currently exploring as a guest. Your lists are saved on this device.
+                      To keep your lists safe and use them on other devices, feel free to Log In or Sign Up!
                     </CardDescription>
                   ) : (
                     <p className="text-muted-foreground mb-4">
@@ -125,7 +125,7 @@ export default function ProfilePage() {
                   <div className="space-y-3">
                     <div className="p-3 border rounded-md bg-secondary/20">
                       <p className="text-sm font-medium">Email</p>
-                      <p className="text-lg">{user.isAnonymous ? "Guest (not signed in)" : user.email}</p>
+                      <p className="text-lg">{user.isAnonymous ? "Guest User (not signed in)" : user.email}</p>
                     </div>
                     {user.metadata.creationTime && !user.isAnonymous && (
                       <div className="p-3 border rounded-md bg-secondary/20">
@@ -136,7 +136,7 @@ export default function ProfilePage() {
                      <div className="p-3 border rounded-md bg-secondary/20">
                       <p className="text-sm font-medium">Account Status</p>
                       <p className="text-lg">
-                        {user.isAnonymous ? "Guest Session" : (user.emailVerified ? "Email Verified" : "Email Not Verified")}
+                        {user.isAnonymous ? "Guest Session" : (user.emailVerified ? "Account Verified" : "Email Not Verified")}
                       </p>
                     </div>
                   </div>
