@@ -152,12 +152,12 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
       </CardContent>
       {onSaveListClick && (
         <CardFooter className="mt-auto pt-6 print-hide">
-          <div className="flex w-full gap-2 justify-start items-center"> {/* Changed justify-between to justify-start */}
+          <div className="flex w-full gap-2 justify-end items-center">
             <Button 
               variant="outline"
               size="sm"
               onClick={onSaveListClick} 
-              className="w-1/4 shadow-sm"
+              className="shadow-sm"
               disabled={isSaveDisabled}
             >
               <Save className="mr-2 h-4 w-4" />
