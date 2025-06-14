@@ -99,7 +99,7 @@ export default function ProfilePage() {
             <h1 className="text-2xl sm:text-3xl font-headline text-primary text-center flex-grow px-4">
               {user?.isAnonymous ? "Guest Profile" : (user ? "User Profile" : "Access Your Profile")}
             </h1>
-            <div className="w-10 h-10 md:w-auto"></div> {/* Spacer for centering title */}
+            <div className="w-10 h-10"></div> {/* Spacer for centering title */}
           </div>
         </header>
 
