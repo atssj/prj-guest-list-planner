@@ -36,10 +36,6 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
   }, []);
 
   const handlePrint = () => {
-    // This is a placeholder. In a real app, you'd use browser print functionality
-    // or a library to generate a printable view.
-    // For now, let's assume it navigates to a print-specific page or opens print dialog.
-    // router.push('/print-preview'); // Example: if you have a print preview page
     window.print(); 
   };
 
@@ -57,23 +53,17 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
       await navigator.share({
         title: 'Guest List Summary',
         text: `Here's the guest list summary: ${summary.totalGuests} guests. Adults: ${summary.totalAdults}, Children: ${summary.totalChildren}.`,
-        // url: window.location.href // Optional: you can share the current page URL
       });
     } catch (error: unknown) {
-      // console.error('Error sharing:', error); // Removed to prevent Next.js overlay for handled errors
       let toastDescription = 'Sharing failed. Your browser might not support this feature or there was an error.';
       
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          // User cancelled the share operation, so we don't need to show an error toast.
           return;
         } else if (error.name === 'NotAllowedError' || error.message.toLowerCase().includes('permission denied')) {
           toastDescription = 'Sharing failed. It seems permission to share was denied or the action was not allowed. Please check your browser settings or try again.';
         }
-        // For other Error types, the generic toastDescription will be used.
-      } else {
-        // If it's not an Error instance (e.g., a string was thrown), use the generic message.
-      }
+      } 
       
       toast({
         title: "Sharing Issue",
@@ -162,46 +152,53 @@ export function GuestSummary({ summary, onSaveListClick, isSaveDisabled = false 
       </CardContent>
       {onSaveListClick && (
         <CardFooter className="mt-auto pt-6 print-hide">
-          <div className="flex w-full gap-0">
+          <div className="flex w-full gap-2 justify-between items-center">
             <Button 
               variant="outline" 
               onClick={onSaveListClick} 
-              className="flex-1 shadow-md rounded-r-none"
+              className="flex-grow shadow-sm"
               disabled={isSaveDisabled}
             >
               <Save className="mr-2 h-4 w-4" />
               Save List
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="px-2 shadow-md rounded-l-none border-l-0"
-                  disabled={isSaveDisabled}
-                  aria-label="More options"
-                >
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={handlePrint}>
-                  <Printer className="mr-2 h-4 w-4" />
-                  Print Current View
-                </DropdownMenuItem>
-                <Link href="/print-preview" passHref legacyBehavior>
-                  <DropdownMenuItem>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Go to Print Preview
+            
+            <div className="flex rounded-md shadow-sm">
+              <Button
+                variant="default"
+                onClick={handleShare}
+                className="rounded-r-none border-r border-primary-foreground/20" 
+                disabled={isSaveDisabled || !isShareApiAvailable}
+                aria-label="Share guest list summary"
+              >
+                <Share2 className="mr-2 h-4 w-4" />
+                Share
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="default"
+                    className="px-2 rounded-l-none"
+                    disabled={isSaveDisabled}
+                    aria-label="More options for printing"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={handlePrint} disabled={isSaveDisabled}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Print Current View
                   </DropdownMenuItem>
-                </Link>
-                {isShareApiAvailable && ( 
-                    <DropdownMenuItem onClick={handleShare}>
-                        <Share2 className="mr-2 h-4 w-4" />
-                        Share Summary
+                  <Link href="/print-preview" passHref legacyBehavior>
+                    <DropdownMenuItem disabled={isSaveDisabled}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Go to Print Preview
                     </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  </Link>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </CardFooter>
       )}
