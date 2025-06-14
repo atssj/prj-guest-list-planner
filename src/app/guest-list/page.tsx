@@ -18,6 +18,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Guest, OtherMealPreference } from "@/lib/types";
 import { AuthDialog } from "@/components/AuthDialog";
+import { auth, db } from "../lib/firebase"; // Added db
+import { useToast } from "../hooks/use-toast"; // Added import
+import { doc, setDoc } from "firebase/firestore"; // Added firestore functions
+import { onAuthStateChanged } from "firebase/auth"; // Added onAuthStateChanged
 
 const GUEST_LIST_STORAGE_KEY = "guestListData_v3";
 
@@ -25,6 +29,45 @@ export default function GuestListPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+  const { toast } = useToast(); // Added for toast notifications
+  const [savePendingAfterLogin, setSavePendingAfterLogin] = useState(false); // New state
+  const [isSaving, setIsSaving] = useState(false); // New state for saving UI
+
+  // Function to save guest list to Firestore
+  const saveGuestListToFirestore = async (userId: string, guestList: Guest[]) => {
+    setIsSaving(true); // Set saving state to true
+    const listRef = doc(db, 'users', userId, 'guestLists', 'mainList');
+    try {
+      await setDoc(listRef, { guests: guestList, updatedAt: new Date() });
+      toast({
+        title: "List Saved!",
+        description: "Your guest list has been saved to your account.",
+      });
+    } catch (error) {
+      console.error("Error saving guest list to Firestore:", error);
+      toast({
+        variant: "destructive",
+        title: "Save Failed",
+        description: "Could not save your guest list. Please try again.",
+      });
+    } finally {
+      setIsSaving(false); // Reset saving state
+    }
+  };
+
+  // Effect for handling auth state changes and pending saves
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user && savePendingAfterLogin) {
+        toast({ title: "Login Successful!", description: "Now saving your list..." });
+        await saveGuestListToFirestore(user.uid, guests);
+        setSavePendingAfterLogin(false);
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [savePendingAfterLogin, guests, toast]); // Added toast to dependencies
 
   useEffect(() => {
     const storedGuests = localStorage.getItem(GUEST_LIST_STORAGE_KEY);
@@ -46,8 +89,14 @@ export default function GuestListPage() {
     return otherMeals.map(meal => `${meal.name} (${meal.count})`).join(", ");
   };
 
-  const handleSaveListClick = () => {
-    setIsAuthDialogOpen(true);
+  const handleSaveListClick = async () => { // Made async
+    const user = auth.currentUser;
+    if (user) {
+      await saveGuestListToFirestore(user.uid, guests); // Call save function
+    } else {
+      setSavePendingAfterLogin(true); // Set pending save
+      setIsAuthDialogOpen(true);
+    }
   };
 
   if (isLoading) {
@@ -71,13 +120,23 @@ export default function GuestListPage() {
             Your Current Guest List
           </h1>
           {guests.length > 0 && (
-            <Button 
-              variant="default" 
+            <Button
+              variant="default"
               onClick={handleSaveListClick}
               aria-label="Save guest list"
+              disabled={isSaving} // Disable button when saving
             >
-              <Save className="mr-2 h-4 w-4" />
-              Save List
+              {isSaving ? (
+                <>
+                  <Save className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save List
+                </>
+              )}
             </Button>
           )}
           {guests.length === 0 && (
@@ -156,7 +215,15 @@ export default function GuestListPage() {
       </main>
       <AuthDialog
         isOpen={isAuthDialogOpen}
-        onClose={() => setIsAuthDialogOpen(false)}
+        onClose={() => {
+          setIsAuthDialogOpen(false);
+          // If dialog is closed AND user is still not logged in,
+          // it implies cancellation or just closing the dialog without acting.
+          if (savePendingAfterLogin && !auth.currentUser) {
+            setSavePendingAfterLogin(false);
+            toast({ title: "Save Cancelled", description: "Login was not completed." });
+          }
+        }}
         onLinkSent={(email) => {
           // Handle post-link sent logic if needed
         }}
