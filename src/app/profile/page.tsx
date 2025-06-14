@@ -24,7 +24,6 @@ export default function ProfilePage() {
       if (currentUser) {
         setUser(currentUser);
       } else {
-        // No user, try to sign in anonymously
         try {
           const userCredential = await signInAnonymously(auth);
           setUser(userCredential.user);
@@ -34,7 +33,7 @@ export default function ProfilePage() {
           });
         } catch (error: any) {
           console.error("Error signing in anonymously:", error);
-          setUser(null); // Ensure user is null if anonymous sign-in fails
+          setUser(null); 
           let toastMessage = "Could not start a guest session. Some features might be unavailable.";
           if (error.code === 'auth/admin-restricted-operation') {
             toastMessage = "Guest sign-in failed. Please ensure Anonymous sign-in is enabled in your Firebase project's Authentication settings.";
@@ -48,15 +47,13 @@ export default function ProfilePage() {
       }
       setIsLoading(false);
     });
-    return () => unsubscribe(); // Cleanup subscription on unmount
+    return () => unsubscribe(); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // toast is stable, auth is stable
+  }, []); 
 
   const handleLogout = async () => {
-    // This function will now only be called by non-anonymous users
     try {
       await signOut(auth);
-      // User state will be updated by onAuthStateChanged, which will trigger anonymous sign-in again.
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out. You are now browsing as a guest.",
@@ -92,14 +89,14 @@ export default function ProfilePage() {
         <header className="mb-6 md:mb-8">
           <div className="flex items-center">
             <Link href="/add-guest" passHref>
-              <Button variant="default" size="icon" aria-label="Back to planner">
+              <Button variant="accent" size="icon" aria-label="Back to planner">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
             <h1 className="text-2xl sm:text-3xl font-headline text-primary text-center flex-grow px-4">
               {user?.isAnonymous ? "Guest Profile" : (user ? "User Profile" : "Access Your Profile")}
             </h1>
-            <div className="w-10 h-10"></div> {/* Spacer for centering title */}
+            <div className="w-10 h-10"></div> 
           </div>
         </header>
 
@@ -117,7 +114,7 @@ export default function ProfilePage() {
                   {user.isAnonymous ? (
                     <CardDescription className="mb-4 text-center">
                       You're currently exploring as a guest. Your lists are saved on this device for now.
-                      To keep them safe and access them from anywhere, please sign in or create an account!
+                      To keep your lists safe and use them on other devices, please Log In or Sign Up!
                     </CardDescription>
                   ) : (
                     <p className="text-muted-foreground mb-4">
@@ -128,7 +125,7 @@ export default function ProfilePage() {
                   <div className="space-y-3">
                     <div className="p-3 border rounded-md bg-secondary/20">
                       <p className="text-sm font-medium">Email</p>
-                      <p className="text-lg">{user.isAnonymous ? "Not signed in (Guest)" : user.email}</p>
+                      <p className="text-lg">{user.isAnonymous ? "Guest (not signed in)" : user.email}</p>
                     </div>
                     {user.metadata.creationTime && !user.isAnonymous && (
                       <div className="p-3 border rounded-md bg-secondary/20">
@@ -150,7 +147,6 @@ export default function ProfilePage() {
                       Log In / Sign Up with Email
                     </Button>
                   ) : (
-                    // Show Log Out button only for non-anonymous (email signed-in) users
                     <Button onClick={handleLogout} variant="outline" className="w-full mt-6">
                       <LogOut className="mr-2 h-4 w-4" />
                       Log Out
@@ -158,7 +154,6 @@ export default function ProfilePage() {
                   )}
                 </>
               ) : (
-                // This block should ideally not be reached if anonymous sign-in always works or error is handled
                 <>
                   <CardDescription className="mb-4 text-center">
                     Sign in or create an account to save your guest lists, view your event history, and manage your preferences.
